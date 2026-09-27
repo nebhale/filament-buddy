@@ -1,0 +1,11 @@
+.git
+.github
+.cache
+.env
+config.yaml
+data
+filament-buddy
+*.test
+__pycache__
+*.pyc
+coverage.out

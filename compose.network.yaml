@@ -1,0 +1,10 @@
+# Optional shared network with an existing Spoolman service.
+# Set spoolman.url to http://spoolman:8000 (or its actual service name/port).
+services:
+  filament-buddy:
+    networks:
+      - spools
+networks:
+  spools:
+    external: true
+    name: "${SPOOLMAN_NETWORK:-spools}"
