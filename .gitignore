@@ -1,0 +1,11 @@
+/config.yaml
+/.env
+/data/
+/filament-buddy
+*.test
+.DS_Store
+
+__pycache__/
+*.pyc
+/coverage.out
+/.cache/
