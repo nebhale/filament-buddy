@@ -1,0 +1,23 @@
+LICENSE
+  s_6951ea044cc556::t_9ed00bffec7956 1-201
+.gitignore
+  s_6951ea044cc556::t_0c180211238d5e 1-6
+  s_6951ea044cc556::t_c171f5952a134b 7-8
+  s_6951ea044cc556::t_5bb63f3279c9c6 9-11
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c43220846b92a4edd90196aace28d5d8f46e22af",
+  "prompts": {},
+  "sessions": {
+    "s_6951ea044cc556": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0df56-a69c-72f0-a594-861396bfdcb6",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
