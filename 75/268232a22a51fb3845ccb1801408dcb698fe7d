@@ -1,0 +1,158 @@
+internal/buddy/protocol.go
+  s_6951ea044cc556::t_fbfb2b35fb6a90 4-11,13-27,29-52,54-64,66-71,73-80,82-95,100-107,110,114
+  s_6951ea044cc556::t_a39238b72339d3 108-109,111
+  s_6951ea044cc556::t_9d2ff6955ec9cb 1-3,12,28,53,115
+  s_6951ea044cc556::t_2c4fdb6fa1aa1b 96-99
+  s_6951ea044cc556::t_78654a3a9ece51 65,72,81,112-113
+internal/buddy/service.go
+  s_6951ea044cc556::t_4f19c346c0d549 20,98
+  s_6951ea044cc556::t_78654a3a9ece51 52,60
+  s_6951ea044cc556::t_fbfb2b35fb6a90 4-10,12-19,21-51,53-59,61-62,64-97,99-127
+  s_6951ea044cc556::t_01059707a27027 63
+  s_6951ea044cc556::t_8be824005acc92 1-3,11
+internal/buddy/config.go
+  s_6951ea044cc556::t_fbfb2b35fb6a90 4-15,19-24,26-41,43-61,63-121
+  s_6951ea044cc556::t_9d2ff6955ec9cb 1-3,16-18,25,42,62,122
+internal/buddy/store.go
+  s_6951ea044cc556::t_fbfb2b35fb6a90 4-15,17-65,71-205,207-230,232-235,239,241-245,247-253,255-263,265-272,274-280,282-293,295-302,304-312,314-328,331-537
+  s_6951ea044cc556::t_9cb5c126668f8b 231,246
+  s_6951ea044cc556::t_78654a3a9ece51 237,254,264,273,281,294,303,313
+  s_6951ea044cc556::t_ce2301c3946420 1-3,16,66-70,206,329-330
+  s_6951ea044cc556::t_9e3e33496ec27e 236,238,240
+CONTRIBUTING.md
+  s_6951ea044cc556::t_5bb63f3279c9c6 13-20,47-50,54-68
+  s_6951ea044cc556::t_0c180211238d5e 1-12,21-46,51-53
+internal/buddy/web.go
+  s_6951ea044cc556::t_fbfb2b35fb6a90 1-319
+CHANGELOG.md
+  s_6951ea044cc556::t_5bb63f3279c9c6 3-8
+  s_6951ea044cc556::t_0c180211238d5e 1-2,9-13
+internal/buddy/testdata/printer-cards.test.cjs
+  s_6951ea044cc556::t_996d48b411c4d5 1-71
+internal/buddy/spoolman.go
+  s_6951ea044cc556::t_8be824005acc92 1-3,17,19,70
+  s_6951ea044cc556::t_fbfb2b35fb6a90 4-16,18,20-69,71-332
+config.example.yaml
+  s_6951ea044cc556::t_0c180211238d5e 1-18
+.github/dependabot.yml
+  s_6951ea044cc556::t_9ed00bffec7956 1-35
+internal/buddy/web/app.js
+  s_6951ea044cc556::t_fbfb2b35fb6a90 1,11,14,23-41,59-60,74,84
+  s_6951ea044cc556::t_4f19c346c0d549 6-10,12-13,15-22,42-58,61-73,75-83,85-88
+  s_6951ea044cc556::t_1164f5c70fd1e0 2-5
+Dockerfile
+  s_6951ea044cc556::t_0c180211238d5e 1-35
+internal/buddy/protocol_test.go
+  s_6951ea044cc556::t_cc50c90ef47dc0 1-26,28-37,39-44,46-95,97-108,110-111,113-138,140-141,149-158,172-195,250
+  s_6951ea044cc556::t_0c6b85bef7c12f 216-238
+  s_6951ea044cc556::t_2c4fdb6fa1aa1b 209,211
+  s_6951ea044cc556::t_78654a3a9ece51 27,38,45,139
+  s_6951ea044cc556::t_cf47e843864070 96,109,142-148,213-215,248
+  s_6951ea044cc556::t_4d1b2d7648e0a8 112,159-171,204-208,210,212,249
+  s_6951ea044cc556::t_9cb5c126668f8b 239-247
+  s_6951ea044cc556::t_72dc4a9489767e 196-198,201-203
+  s_6951ea044cc556::t_42772d070fefc9 199-200
+scripts/collect_sources.py
+  s_6951ea044cc556::t_99f23ed8f1fb56 1-144
+internal/buddy/models.go
+  s_6951ea044cc556::t_ce2301c3946420 1-5,20-21,30-31
+  s_6951ea044cc556::t_fbfb2b35fb6a90 6-19,22-29,32-94
+scripts/release_tags.py
+  s_6951ea044cc556::t_9ed00bffec7956 1-52
+scripts/go-notices.sh
+  s_6951ea044cc556::t_9ed00bffec7956 1-11
+internal/buddy/web/pages.html
+  s_6951ea044cc556::t_fbfb2b35fb6a90 1-6,12-22,24-26,29
+  s_6951ea044cc556::t_c171f5952a134b 23
+  s_6951ea044cc556::t_4f19c346c0d549 11
+  s_6951ea044cc556::t_c88193281f9882 28,34
+  s_6951ea044cc556::t_78654a3a9ece51 31
+  s_6951ea044cc556::t_c0918b12eafa43 32
+  s_6951ea044cc556::t_cfaa3ecde00ea4 7-10,27,30,33
+README.md
+  s_6951ea044cc556::t_2eac7025322df8 78-79
+  s_6951ea044cc556::t_2c4fdb6fa1aa1b 103-108
+  s_6951ea044cc556::t_5bb63f3279c9c6 24,27-29,54,60-64,236-237
+  s_6951ea044cc556::t_1bda3c494934f6 40-49
+  s_6951ea044cc556::t_01059707a27027 1-19,25-26,30-39,50-53,55-59,65-77,80-92,96-98,101-102,109-127,129,131-144,146-235,238
+  s_6951ea044cc556::t_78654a3a9ece51 93-95,99-100,128,130,145
+  s_6951ea044cc556::t_f72b997c8bce27 20-23
+go.mod
+  s_6951ea044cc556::t_9ed00bffec7956 1-20
+.github/ISSUE_TEMPLATE/config.yml
+  s_6951ea044cc556::t_9ed00bffec7956 1-3,5
+  s_6951ea044cc556::t_1f34dbebc13dde 4
+internal/buddy/spoolman_test.go
+  s_6951ea044cc556::t_78654a3a9ece51 75-76
+  s_6951ea044cc556::t_cd349e2ef56e82 1-74,77-273
+scripts/release_test.py
+  s_6951ea044cc556::t_9ed00bffec7956 1-2,5-7,24-40
+  s_6951ea044cc556::t_99f23ed8f1fb56 3-4,8-23,41-44
+cmd/filament-buddy/main.go
+  s_6951ea044cc556::t_01059707a27027 96-97
+  s_6951ea044cc556::t_fbfb2b35fb6a90 15,92-93
+  s_6951ea044cc556::t_8be824005acc92 1-14,16-91,94-95,98-115
+internal/buddy/web_test.go
+  s_6951ea044cc556::t_78654a3a9ece51 89
+  s_6951ea044cc556::t_cd349e2ef56e82 1-88,90-104
+internal/buddy/web/style.css
+  s_6951ea044cc556::t_fbfb2b35fb6a90 1-179
+  s_6951ea044cc556::t_78654a3a9ece51 180
+scripts/demo/main.go
+  s_6951ea044cc556::t_7e156de2ac363d 65-68
+  s_6951ea044cc556::t_5bb63f3279c9c6 10-11
+  s_6951ea044cc556::t_78654a3a9ece51 36,51,54
+  s_6951ea044cc556::t_0c180211238d5e 1-9,12-35,37-50,52-53,55-64,69
+SECURITY.md
+  s_6951ea044cc556::t_0c180211238d5e 1-13
+  s_6951ea044cc556::t_5bb63f3279c9c6 14-20
+compose.volume.yaml
+  s_6951ea044cc556::t_0c180211238d5e 1-8
+.github/ISSUE_TEMPLATE/bug.yml
+  s_6951ea044cc556::t_1f34dbebc13dde 6,10,18
+  s_6951ea044cc556::t_9ed00bffec7956 1-5,7-9,11-17,19-35
+compose.yaml
+  s_6951ea044cc556::t_0c180211238d5e 1-2,4-21
+  s_6951ea044cc556::t_5bb63f3279c9c6 3
+THIRD_PARTY.md
+  s_6951ea044cc556::t_0c180211238d5e 1-7,21-22
+  s_6951ea044cc556::t_5bb63f3279c9c6 8-20
+internal/buddy/store_test.go
+  s_6951ea044cc556::t_784e7c8e8bf1cd 1-49,51-66,68-74,76-96,98-101,103-104,106-109,111-113,115-117,119-122,125-134,136-140,142-171,174-178,180-186,189-232
+  s_6951ea044cc556::t_4d1b2d7648e0a8 233-238,241-246,248-253,256-257,259-261
+  s_6951ea044cc556::t_78654a3a9ece51 50,67,75,97,102,105,110,114,118,123-124,135,141,172-173,179,187-188,239-240,247,254-255,258
+  s_6951ea044cc556::t_0c6b85bef7c12f 262-299
+compose.network.yaml
+  s_6951ea044cc556::t_0c180211238d5e 1-10
+.github/ISSUE_TEMPLATE/feature.yml
+  s_6951ea044cc556::t_9ed00bffec7956 1-15
+.github/workflows/ci.yaml
+  s_6951ea044cc556::t_01059707a27027 1-18,20-43,45-51,53-72
+  s_6951ea044cc556::t_99f23ed8f1fb56 19,44,52
+.dockerignore
+  s_6951ea044cc556::t_5bb63f3279c9c6 2-3,9-11
+  s_6951ea044cc556::t_0c180211238d5e 1,4-8
+.github/workflows/release.yaml
+  s_6951ea044cc556::t_99f23ed8f1fb56 46-48,51-52,72,84-85,115-118
+  s_6951ea044cc556::t_01059707a27027 1-45,49-50,53-71,73-83,86-114,119-133
+go.sum
+  s_6951ea044cc556::t_3e65257e2ec122 1-54
+internal/buddy/testdata/browser.test.cjs
+  s_6951ea044cc556::t_722f1b7d2b1f22 1-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "75268232a22a51fb3845ccb1801408dcb698fe7d",
+  "prompts": {},
+  "sessions": {
+    "s_6951ea044cc556": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0df56-a69c-72f0-a594-861396bfdcb6",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
