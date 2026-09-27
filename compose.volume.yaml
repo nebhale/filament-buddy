@@ -1,0 +1,8 @@
+services:
+  filament-buddy:
+    volumes:
+      - type: volume
+        source: filament-buddy-data
+        target: /data
+volumes:
+  filament-buddy-data:

@@ -1,0 +1,21 @@
+services:
+  filament-buddy:
+    image: ghcr.io/nebhale/filament-buddy:${FILAMENT_BUDDY_VERSION:-1.0.0}
+    restart: unless-stopped
+    init: true
+    ports:
+      - "8081:8080/tcp"
+      - "127.0.0.1:18515:8514/udp"
+    environment:
+      FILAMENT_BUDDY_AUTH_USER: "${FILAMENT_BUDDY_AUTH_USER:-}"
+      FILAMENT_BUDDY_AUTH_PASSWORD: "${FILAMENT_BUDDY_AUTH_PASSWORD:-}"
+    volumes:
+      - ./config.yaml:/config/config.yaml:ro
+      - type: bind
+        source: ./data
+        target: /data
+        bind:
+          create_host_path: false
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    stop_grace_period: 20s
