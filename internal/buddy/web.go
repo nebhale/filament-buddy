@@ -31,6 +31,7 @@ type Setup struct {
 	Snippets Snippets
 }
 type Page struct {
+	Live                                         bool
 	View, Title, CSRF, Error, SpoolError, Filter string
 	Printers                                     []PrinterStatus
 	Sessions                                     []Session
@@ -61,6 +62,14 @@ func NewWeb(s *Service) (http.Handler, error) {
 				return ""
 			}
 			return fmt.Sprintf("%.3f", float64(*n)/1000)
+		},
+		"hasSpool": func(id int, spools []Spool) bool {
+			for _, v := range spools {
+				if v.ID == id {
+					return true
+				}
+			}
+			return false
 		},
 		"label": func(id int, spools []Spool) string {
 			if id == 0 {
@@ -93,6 +102,8 @@ func NewWeb(s *Service) (http.Handler, error) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", w.dashboard)
 	mux.HandleFunc("GET /setup", w.setup)
+	mux.HandleFunc("GET /api/live", w.live)
+	mux.HandleFunc("GET /api/events", func(rw http.ResponseWriter, r *http.Request) { serveEvents(rw, r, &s.Store.changes, w.csrf) })
 	mux.HandleFunc("GET /sessions/{id}", w.session)
 	mux.HandleFunc("GET /api/status", func(rw http.ResponseWriter, r *http.Request) {
 		p, e := s.Status()
@@ -128,7 +139,7 @@ func NewWeb(s *Service) (http.Handler, error) {
 	mux.HandleFunc("POST /sessions/{id}/{action}", w.mutate)
 	static, _ := fs.Sub(assets, "web")
 	mux.Handle("GET /static/", http.StripPrefix("/static/", http.FileServerFS(static)))
-	secured := w.security(mux)
+	secured := w.security(jsonActions(mux))
 	return http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/healthz" && r.Method == "GET" {
 			if err := s.Store.db.PingContext(r.Context()); err != nil {
@@ -178,6 +189,18 @@ func (w *Web) security(next http.Handler) http.Handler {
 func (w *Web) render(rw http.ResponseWriter, status int, p Page) {
 	p.CSRF = w.csrf
 	p.SpoolError = w.s.Spoolman.Status()
+	if _, ok := rw.(*actionResponse); ok {
+		renderJSONError(rw, status, p.Error)
+		return
+	}
+	if live, ok := rw.(*liveResponse); ok {
+		if status != 200 {
+			renderJSONError(rw, status, p.Error)
+			return
+		}
+		w.renderLive(live, p)
+		return
+	}
 	var b bytes.Buffer
 	if err := w.t.ExecuteTemplate(&b, "layout", p); err != nil {
 		slog.Error("render", "error", err)
@@ -300,13 +323,31 @@ func (w *Web) mutate(rw http.ResponseWriter, r *http.Request) {
 			}
 		}
 		if err == nil {
-			err = w.s.Store.SetSection(id, sid, rev, n, nil, false)
+			if values, ok := r.PostForm["expected_spool"]; ok && strings.Contains(r.Header.Get("Accept"), "application/json") {
+				expected, e := strconv.Atoi(values[0])
+				if e != nil || expected < 0 {
+					err = ErrConflict
+				} else {
+					err = w.s.Store.SetSectionExpected(id, sid, n, nil, false, SectionExpectation{Spool: expected})
+				}
+			} else {
+				err = w.s.Store.SetSection(id, sid, rev, n, nil, false)
+			}
 		}
 	case "weight":
 		var mg *int64
 		mg, err = parseMG(r.PostForm.Get("grams"))
 		if err == nil {
-			err = w.s.Store.SetSection(id, sid, rev, 0, mg, true)
+			if values, ok := r.PostForm["expected_override"]; ok && strings.Contains(r.Header.Get("Accept"), "application/json") {
+				expected, e := parseMG(values[0])
+				if e != nil {
+					err = ErrConflict
+				} else {
+					err = w.s.Store.SetSectionExpected(id, sid, 0, mg, true, SectionExpectation{Override: expected})
+				}
+			} else {
+				err = w.s.Store.SetSection(id, sid, rev, 0, mg, true)
+			}
 		}
 	case "resolve":
 		err = w.s.Store.Resolve(id, sid, r.PostForm.Get("operation"), r.PostForm.Get("resolution"), rev)

@@ -2,8 +2,10 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"time"
@@ -57,13 +59,60 @@ func main() {
 		v, _ := s.Get(old)
 		s.SetSection(old, v.Sections[0].ID, -1, 19, nil, false)
 	}
-	h, err := buddy.NewWeb(buddy.NewService(c, s))
+	service := buddy.NewService(c, s)
+	h, err := buddy.NewWeb(service)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Demo: http://127.0.0.1:8091  Session: /sessions/" + id)
-	log.Fatal(http.ListenAndServe(c.HTTP.Address, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("POST /demo/marker", func(w http.ResponseWriter, r *http.Request) {
+		e, err := buddy.ParseMarker("M118 FB1 " + r.FormValue("marker"))
+		if err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		e.ReceivedAt = time.Now().UTC()
+		if err = service.Handle(e); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.HandleFunc("POST /demo/catalog", func(w http.ResponseWriter, r *http.Request) {
+		var catalog []buddy.Spool
+		if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&catalog); err != nil {
+			http.Error(w, err.Error(), 400)
+			return
+		}
+		if err := s.CacheSpools(catalog); err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		w.WriteHeader(http.StatusNoContent)
+	})
+	application := newDemoApplication(h)
+	mux.HandleFunc("POST /demo/restart", func(w http.ResponseWriter, r *http.Request) {
+		next, err := buddy.NewWeb(service)
+		if err != nil {
+			http.Error(w, err.Error(), 500)
+			return
+		}
+		application.reset(next)
+		w.WriteHeader(http.StatusNoContent)
+	})
+	mux.Handle("/", application)
+	port := os.Getenv("BUDDY_DEMO_PORT")
+	if port == "" {
+		port = "8091"
+	}
+	listener, err := net.Listen("tcp", "127.0.0.1:"+port)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("Demo: http://%s  Session: /sessions/%s\n", listener.Addr(), id)
+	log.Fatal(http.Serve(listener, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		log.Printf("%s %s", r.Method, r.URL.Path)
-		h.ServeHTTP(w, r)
+		mux.ServeHTTP(w, r)
 	})))
 }

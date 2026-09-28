@@ -46,19 +46,24 @@ func (v remoteSpool) spool() Spool {
 }
 
 type Spoolman struct {
-	base      string
-	client    *http.Client
-	store     *Store
-	mu        sync.Mutex
-	lastError string
-	refreshMu sync.Mutex
+	base        string
+	client      *http.Client
+	store       *Store
+	mu          sync.Mutex
+	lastError   string
+	refreshedAt time.Time
+	refreshing  bool
+	refreshMu   sync.Mutex
 }
 
 func NewSpoolman(c Config, s *Store) *Spoolman {
 	return &Spoolman{base: strings.TrimRight(c.Spoolman.URL, "/"), client: &http.Client{Timeout: c.Spoolman.Timeout, CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }}, store: s}
 }
-func (c *Spoolman) Status() string { c.mu.Lock(); defer c.mu.Unlock(); return c.lastError }
+func (c *Spoolman) Status() string         { c.mu.Lock(); defer c.mu.Unlock(); return c.lastError }
+func (c *Spoolman) RefreshedAt() time.Time { c.mu.Lock(); defer c.mu.Unlock(); return c.refreshedAt }
+func (c *Spoolman) Refreshing() bool       { c.mu.Lock(); defer c.mu.Unlock(); return c.refreshing }
 func (c *Spoolman) status(err error) {
+	defer c.store.changes.publish()
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.lastError = ""
@@ -100,6 +105,16 @@ func (c *Spoolman) request(ctx context.Context, method, path string, body any, o
 func (c *Spoolman) Refresh(ctx context.Context) error {
 	c.refreshMu.Lock()
 	defer c.refreshMu.Unlock()
+	c.mu.Lock()
+	c.refreshing = true
+	c.mu.Unlock()
+	c.store.changes.publish()
+	defer func() {
+		c.mu.Lock()
+		c.refreshing = false
+		c.mu.Unlock()
+		c.store.changes.publish()
+	}()
 	// Explicitly include archived spools; no cache deletion, so history survives
 	// spool deletion. Assignment GET validates an uncached or deleted choice.
 	var out []Spool
@@ -121,6 +136,11 @@ func (c *Spoolman) Refresh(ctx context.Context) error {
 		}
 	}
 	err := c.store.CacheSpools(out)
+	if err == nil {
+		c.mu.Lock()
+		c.refreshedAt = time.Now().UTC()
+		c.mu.Unlock()
+	}
 	c.status(err)
 	return err
 }
@@ -183,6 +203,7 @@ func (s *Store) Claim(now time.Time) (*Work, error) {
 				if err = s.save(s.db, &ss); err != nil {
 					return nil, err
 				}
+				s.changes.publish()
 				return w, nil
 			}
 		}

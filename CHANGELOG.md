@@ -1,5 +1,20 @@
 # Changelog
 
+## Unreleased
+
+- Update print libraries and session pages automatically over authenticated SSE,
+  with polling fallback, reconnect recovery, and a compact connection indicator.
+- Preserve drafts, focus, scroll position, filters, and expanded panels; save
+  forms inline and refresh credentials after restarts without replaying writes.
+- Add an accessible searchable spool combobox with local catalog search,
+  archived filtering, keyboard selection, color and remaining weight, refresh
+  status, and preserved choices during catalog updates.
+- Compare expected spool assignments and weight overrides transactionally so
+  worker progress does not invalidate edits; show explicit conflict resolution
+  while retaining legacy revision and inventory reconciliation safeguards.
+- Add browser and SSE regression checks and document public-host streaming
+  verification for the next Cloudflare Tunnel deployment.
+
 ## 1.0.0
 
 The first stable release of Filament Buddy.

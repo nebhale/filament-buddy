@@ -91,7 +91,7 @@ func run() error {
 	var workers sync.WaitGroup
 	workers.Go(func() { s.Spoolman.Run(ctx) })
 	workers.Go(func() { s.Spoolman.RefreshLoop(ctx) })
-	server := &http.Server{Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 10 * time.Minute, IdleTimeout: time.Minute, MaxHeaderBytes: 16384}
+	server := &http.Server{BaseContext: func(net.Listener) context.Context { return ctx }, Handler: handler, ReadHeaderTimeout: 5 * time.Second, ReadTimeout: 15 * time.Second, WriteTimeout: 10 * time.Minute, IdleTimeout: time.Minute, MaxHeaderBytes: 16384}
 	failed := make(chan error, 2)
 	workers.Go(func() { failed <- s.ServeUDP(ctx, udp) })
 	workers.Go(func() { failed <- server.Serve(listener) })

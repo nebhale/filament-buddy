@@ -19,9 +19,10 @@ var ErrNotFound = errors.New("not found")
 var ErrConflict = errors.New("conflict; reload the page and check the section status")
 
 type Store struct {
-	db   *sql.DB
-	lock *os.File
-	mu   sync.Mutex
+	changes changes
+	db      *sql.DB
+	lock    *os.File
+	mu      sync.Mutex
 }
 
 func newID() string { return rand.Text() }
@@ -194,7 +195,7 @@ func (s *Store) Edit(id string, revision int, fn func(*Session) error) error {
 	if err = s.save(tx, &ss); err != nil {
 		return err
 	}
-	return tx.Commit()
+	return s.changed(tx.Commit())
 }
 func newSection(n int, state string) Section {
 	return Section{ID: newID(), Number: n, State: state, Applied: map[int]int64{}}
@@ -252,7 +253,7 @@ func (s *Store) Apply(e Event) (string, error) {
 		return "", err
 	}
 	if id == "" && e.Kind == "STOP" {
-		return "orphan end", tx.Commit()
+		return "orphan end", s.changed(tx.Commit())
 	}
 	var ss Session
 	if id != "" {
@@ -287,16 +288,16 @@ func (s *Store) Apply(e Event) (string, error) {
 				if err = s.save(tx, &ss); err != nil {
 					return "", err
 				}
-				return "conflicting marker", tx.Commit()
+				return "conflicting marker", s.changed(tx.Commit())
 			}
-			return "duplicate", tx.Commit()
+			return "duplicate", s.changed(tx.Commit())
 		}
 		if e.Kind == "STOP" && e.Section < ss.Current {
 			ss.audit("out-of-order end", e.Raw)
 			if err = s.save(tx, &ss); err != nil {
 				return "", err
 			}
-			return "out-of-order end", tx.Commit()
+			return "out-of-order end", s.changed(tx.Commit())
 		}
 		v.ReportedMG = &e.Milligrams
 		v.State = "complete"
@@ -323,7 +324,7 @@ func (s *Store) Apply(e Event) (string, error) {
 	if err = s.save(tx, &ss); err != nil {
 		return "", err
 	}
-	return ss.ID, tx.Commit()
+	return ss.ID, s.changed(tx.Commit())
 }
 
 // Pending requests have not reached Spoolman and may be replaced. In-flight
@@ -403,11 +404,34 @@ func section(ss *Session, id string) (*Section, error) {
 	}
 	return nil, ErrNotFound
 }
+
+// SectionExpectation compares the field the user actually edited, rather than
+// rejecting drafts because a worker advanced the whole-session revision.
+type SectionExpectation struct {
+	Spool    int
+	Override *int64
+}
+
 func (s *Store) SetSection(id, sid string, rev, spool int, override *int64, editWeight bool) error {
+	return s.setSection(id, sid, rev, spool, override, editWeight, nil)
+}
+func (s *Store) SetSectionExpected(id, sid string, spool int, override *int64, editWeight bool, expected SectionExpectation) error {
+	return s.setSection(id, sid, -1, spool, override, editWeight, &expected)
+}
+func (s *Store) setSection(id, sid string, rev, spool int, override *int64, editWeight bool, expected *SectionExpectation) error {
 	return s.Edit(id, rev, func(ss *Session) error {
 		v, err := section(ss, sid)
 		if err != nil {
 			return err
+		}
+		if expected != nil {
+			matches := v.SpoolID == expected.Spool
+			if editWeight {
+				matches = (v.OverrideMG == nil && expected.Override == nil) || (v.OverrideMG != nil && expected.Override != nil && *v.OverrideMG == *expected.Override)
+			}
+			if !matches {
+				return fmt.Errorf("%w: this value changed while you were editing", ErrConflict)
+			}
 		}
 		if spool < 0 {
 			return ErrConflict
@@ -513,7 +537,7 @@ func (s *Store) CacheSpools(spools []Spool) error {
 			return err
 		}
 	}
-	return tx.Commit()
+	return s.changed(tx.Commit())
 }
 func (s *Store) Spools() ([]Spool, error) {
 	rows, err := s.db.Query(`SELECT body FROM spools ORDER BY id`)
