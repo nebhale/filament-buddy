@@ -21,6 +21,12 @@ Pi and x86 Linux, without a cloud service or software on the printer.
 
 ![Session sections with synthetic demonstration data](docs/images/session.png)
 
+Open a session and choose **Edit display name** to give it a more useful name.
+This works for active and past sessions. Leave the field blank to restore the
+original name. Custom names appear in the library, printer card, and session
+page; the original name and received printer markers remain in the record.
+Names are local to each Buddy app, so edits in one app do not rename the other.
+
 ## Quick start
 
 Prerequisites: Docker, Spoolman, a Buddy-firmware printer with `gcode` metrics,

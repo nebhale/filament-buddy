@@ -6,6 +6,7 @@ type Session struct {
 	ID          string
 	PrinterID   string
 	Name        string
+	DisplayName string `json:",omitempty"`
 	State       string
 	CloseReason string
 	OpenedAt    time.Time

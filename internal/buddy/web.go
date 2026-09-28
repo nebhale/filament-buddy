@@ -105,6 +105,7 @@ func NewWeb(s *Service) (http.Handler, error) {
 	mux.HandleFunc("GET /api/live", w.live)
 	mux.HandleFunc("GET /api/events", func(rw http.ResponseWriter, r *http.Request) { serveEvents(rw, r, &s.Store.changes, w.csrf) })
 	mux.HandleFunc("GET /sessions/{id}", w.session)
+	mux.HandleFunc("POST /sessions/{id}/name", w.renameSession)
 	mux.HandleFunc("GET /api/status", func(rw http.ResponseWriter, r *http.Request) {
 		p, e := s.Status()
 		if e != nil {
@@ -214,7 +215,11 @@ func (w *Web) render(rw http.ResponseWriter, status int, p Page) {
 func (w *Web) fail(rw http.ResponseWriter, err error) {
 	status := 500
 	message := "Unable to complete request. Check service logs."
-	if errors.Is(err, ErrNotFound) {
+	if errors.Is(err, ErrInvalidDisplayName) {
+		status, message = 400, err.Error()
+	} else if errors.Is(err, ErrDisplayNameConflict) {
+		status, message = 409, err.Error()
+	} else if errors.Is(err, ErrNotFound) {
 		status = 404
 		message = "Session or section not found."
 	} else if errors.Is(err, ErrConflict) {
@@ -258,7 +263,7 @@ func (w *Web) session(rw http.ResponseWriter, r *http.Request) {
 		w.fail(rw, err)
 		return
 	}
-	w.render(rw, 200, Page{View: "session", Title: ss.Name, Session: ss, Spools: spools})
+	w.render(rw, 200, Page{View: "session", Title: ss.Title(), Session: ss, Spools: spools})
 }
 func (w *Web) setup(rw http.ResponseWriter, r *http.Request) {
 	p := Page{View: "setup", Title: "Printer setup"}
