@@ -194,6 +194,87 @@ Spool assignments never change physical spool locations. FilaBridge's old histor
 is not imported. Disable competing consumption tracking for these prints before
 using Filament Buddy, or both applications will charge them.
 
+## Live updates and remote access
+
+The print library and session pages update automatically. A **Live** indicator
+means the page has an SSE connection; **Updating every 3 seconds** means polling
+is keeping it current. A disconnected page keeps its last successful view and
+any drafts. Background tabs pause updates and resynchronize when visible again.
+Filters, pagination, expanded panels, focus, and scroll position are preserved.
+A library row under focus or a pointer stays in place until interaction ends.
+
+Save buttons still apply edits explicitly, without navigating away. Errors stay
+beside the form. If a save's response is lost, the browser first retrieves current
+state and asks you to review it before another submission; it never repeats the
+write automatically. Application restarts refresh page credentials while keeping
+drafts. If authentication expires, sign in in another tab and return to the draft.
+Ordinary HTML form submission remains available without JavaScript.
+
+Spool and weight edits compare the saved value you started editing inside the
+mutation transaction. Unrelated section edits and worker progress do not reject
+these drafts. If the same value changes, **Use saved value** discards your draft;
+**Save my value** applies it only if the reviewed saved value has not changed
+again. Session management, planning, and accounting resolution retain revision
+and operation checks. The existing uncertain-operation and inventory reconciliation
+rules remain authoritative. History updates are fetched while its panel is open.
+
+The spool combobox searches the shared cached catalog immediately, matching all
+space-separated words against ID, vendor, name, and material. Exact IDs rank
+first. Results include color, remaining weight when known, and archived status;
+up to 50 choices include **No spool**. Use **Include archived** to find retired
+spools; assigned and draft selections remain visible even if unavailable. Arrow
+keys move the highlight, Enter selects without submitting, and Escape dismisses.
+**Save spool** applies the selection. Searching alone does not create a draft.
+
+The catalog still refreshes about once a minute. **Refresh catalog** requests an
+explicit refresh while cached results remain searchable. Freshness and failures
+appear beside the picker; refreshed catalogs preserve search text, draft selection,
+and keyboard highlight by ID. No keystroke makes a Spoolman request, and historical
+spool retention is unchanged.
+
+Each visible page uses one authenticated `GET /api/events` stream. The server
+flushes `text/event-stream` immediately, sends a heartbeat every 15 seconds, and
+bounds each write without imposing a lifetime limit on a healthy stream. Change
+notifications follow commits and runtime changes; slow subscribers coalesce them
+instead of blocking workers. `GET /api/live` retrieves current rendered regions
+and credentials, omitting unchanged regions by hash. Reconnecting always reads
+current state, so notifications do not need a durable event log. After an SSE
+error or 45 seconds without a heartbeat, polling starts and SSE retries back off
+to at most 30 seconds. These are additive interfaces; there is no database
+migration or new infrastructure service.
+
+A configured Cloudflare Tunnel can carry this stream directly to the application;
+nginx is not required. Keep `/api/events` unbuffered and uncached, preserve its
+`Content-Type: text/event-stream`, and allow `/api/live` through the same
+authentication policy. Cloudflare documents that this content type disables
+[tunnel response buffering](https://developers.cloudflare.com/tunnel/troubleshooting/).
+[Quick Tunnels](https://developers.cloudflare.com/tunnel/get-started/) on
+`trycloudflare.com` do not support SSE; use a configured tunnel for production.
+Any additional reverse proxy must also flush streams and permit idle intervals
+longer than the heartbeat. Do not put service tokens or proxy credentials in
+browser JavaScript.
+
+For the next deployment, check the **public hostname**, not just localhost:
+
+1. Open browser developer tools and confirm `/api/events` returns an immediate
+   `change` event and individual heartbeats about 15 seconds apart. Leave the page
+   open for more than ten minutes and confirm updates still arrive. With Basic
+   authentication, `curl -N -u USER https://buddy.example.com/api/events` prompts
+   for the password and shows the stream; include the normal Access login when
+   Cloudflare Access protects the hostname.
+2. Open two tabs, edit a draft in one, and change the same session in the other.
+   Confirm live updates preserve the draft and show any conflicting saved value.
+3. Block `/api/events` in developer tools: verify polling continues updates.
+   Unblock it and verify **Live** returns. Toggle browser offline mode and hide
+   then restore the tab; the last view should remain and catch up on recovery.
+4. During an approved application restart, keep a draft open and verify fresh
+   credentials, reconnection, and an explicit save. Never retry an uncertain
+   accounting operation merely to test the transport.
+
+Local HTTP/1.1, HTTP/2, and browser tests cover streaming and recovery, but do not
+verify a production tunnel or its Access/WAF configuration. Deployment and release
+publication are separate from this feature.
+
 ## Configuration and storage
 
 Unknown YAML fields, invalid addresses, duplicate printer IDs, and unsupported

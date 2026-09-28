@@ -2,33 +2,24 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const source = fs.readFileSync(`${__dirname}/../web/app.js`, 'utf8');
-function environment({ dirty = false, status = 200 } = {}) {
- let callback, reloads = 0;
- const notice = { hidden: true };
- const session = { dataset: { id: 'test', revision: '1' } };
- const doc = {
-  hidden: false, activeElement: { tagName: 'BODY' },
-  querySelectorAll: () => [], querySelector: () => null,
-  getElementById: id => id === 'session-state' ? session : notice,
-  addEventListener: (type, fn) => { if (dirty) fn(); }
- };
- vm.runInNewContext(source, {
-  document: doc, window: { location: { reload() { reloads++; } } },
-  setInterval(fn) { callback = fn; },
-  fetch: async () => ({ ok: status === 200, json: async () => ({ Revision: 2 }) })
- });
- return { tick: () => callback(), notice, doc, reloads: () => reloads };
-}
-test('refreshes updated sections when there are no edits', async () => {
- const e = environment(); await e.tick(); assert.equal(e.reloads(), 1);
+const context = vm.createContext({ window: {}, document: { querySelectorAll: () => [] } });
+vm.runInContext(fs.readFileSync(`${__dirname}/../web/picker.js`, 'utf8'), context);
+const search = (spools, query, archived = false, assigned = '0', selected = '0') => {
+ context.spools = spools; context.query = query; context.archived = archived; context.assigned = assigned; context.selected = selected;
+ return Array.from(vm.runInContext('searchSpools(spools, query, archived, assigned, selected)', context), s => s.ID);
+};
+const spools = [
+ { ID: 7, Label: '#7 · Prusament Galaxy Purple PLA' },
+ { ID: 12, Label: '#12 · Polymaker Purple PETG' },
+ { ID: 17, Label: '#17 · Old Purple PLA', Archived: true },
+];
+test('spool search matches all terms regardless of case or order', () => {
+ assert.deepEqual(search(spools, 'PLA PURPLE'), [7]);
+ assert.deepEqual(search(spools, 'purple polymaker'), [12]);
+ assert.deepEqual(search(spools, 'missing'), []);
 });
-test('preserves edits and offers a reload instead', async () => {
- const e = environment({ dirty: true }); await e.tick(); assert.equal(e.reloads(), 0); assert.equal(e.notice.hidden, false);
+test('archived spools are hidden unless requested or retained as a choice', () => {
+ assert.deepEqual(search(spools, 'purple', true), [12,17,7]);
+ assert.ok(search(spools, 'purple', false, '17').includes(17));
 });
-test('an expired authenticated page does not reload repeatedly', async () => {
- const e = environment({ status: 401 }); await e.tick(); assert.equal(e.reloads(), 0);
-});
-test('hidden tabs do not refresh', async () => {
- const e = environment(); e.doc.hidden = true; await e.tick(); assert.equal(e.reloads(), 0);
-});
+test('exact spool identifiers rank first', () => { assert.equal(search(spools, '7', true)[0], 7); });

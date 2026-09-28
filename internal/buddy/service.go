@@ -35,6 +35,7 @@ func NewService(c Config, s *Store) *Service {
 	return v
 }
 func (s *Service) Handle(e Event) error {
+	defer s.Store.changes.publish()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, ok := s.status[e.PrinterID]
@@ -68,6 +69,7 @@ func (s *Service) Handle(e Event) error {
 	return nil
 }
 func (s *Service) CloseSession(id string, rev int) error {
+	defer s.Store.changes.publish()
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	ss, err := s.Store.Get(id)

@@ -1,7 +1,7 @@
 # Contributing
 
-Go 1.27+, Node.js 24+, and Python 3 are used for development. No npm dependencies
-or browser build step are required. SQLite uses the pure-Go modernc driver.
+Go 1.27+, Node.js 24+, and Python 3 are used for development. The application has no npm dependencies
+or browser build step. Browser regression tests use Playwright as a test-only tool. SQLite uses the pure-Go modernc driver.
 
 ```sh
 go test -race ./...
@@ -32,7 +32,8 @@ Indexed SQL columns support active-session, paginated-history, and work queries.
 A session document owns its ordered sections, observations, audit history, applied
 per-spool balances, and operation ledger. A transaction saves edits and adjustment
 plans together. One process lock and an application mutation mutex serialize
-changes; form revision checks prevent stale browser edits from overwriting them.
+changes. Enhanced assignment and override forms compare expected original values
+inside that transaction; legacy forms and structural actions retain revision checks.
 
 The worker persists `inflight` before any remote operation. Confirmed writes
 update the applied balance and regenerate desired deltas. A crash leaves an
@@ -66,3 +67,31 @@ registry password.
 
 Keep live printer addresses, credentials, personal inventory, and deployment
 files out of source control. Use illustrative configuration and synthetic data.
+
+## Live browser verification
+
+The shared `web/updates.js` transport and reconciler intentionally match in both
+Buddy repositories. Keep changes and their regression tests aligned. The server
+owns rendered presentation; the browser owns drafts and interaction. Notifications
+are invalidations, not commands or mutation acknowledgments.
+
+CI runs `scripts/browser.test.cjs` against isolated loopback demos with synthetic
+data at desktop and mobile widths. To run it locally with Node.js 24+:
+
+```sh
+buddy_browser_tools="$(mktemp -d)"
+npm install --prefix "$buddy_browser_tools" --no-audit --no-fund playwright@1.62.1
+node "$buddy_browser_tools/node_modules/playwright/cli.js" install chromium --only-shell
+NODE_PATH="$buddy_browser_tools/node_modules" node --test scripts/browser.test.cjs
+```
+
+Set `BUDDY_SCREENSHOT_DIR` to retain desktop and mobile screenshots. The tests
+build and stop their own demo server with `BUDDY_DEMO_PORT=0`. Demo-only marker,
+catalog (Filament), and handler-restart routes exercise real HTTP without touching
+production or hardware. Production endpoints do not include these controls.
+The suites cover multiple tabs, conflicts, focus, drafts, polling, reconnects,
+and fresh credentials after a restart. Unit tests additionally control heartbeat
+expiry, hidden tabs, and obsolete responses deterministically. Required Source
+and native ARM64/AMD64 container checks must all pass before merge. Follow the
+README public-host checks at the next deployment; local results cannot certify
+a production Cloudflare Tunnel.
