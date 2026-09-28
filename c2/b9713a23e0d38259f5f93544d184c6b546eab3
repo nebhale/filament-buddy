@@ -1,0 +1,21 @@
+internal/buddy/web/updates.js
+  s_58058af2ffb170::t_802490d214029a 34,41-42,45
+scripts/browser.test.cjs
+  s_58058af2ffb170::t_51e58f9c70fe16 143-148,157-160,186-187,191
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "c2b9713a23e0d38259f5f93544d184c6b546eab3",
+  "prompts": {},
+  "sessions": {
+    "s_58058af2ffb170": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0e5ed-1152-7c12-b1d6-c0b20fc22e21",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
