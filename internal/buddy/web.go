@@ -47,8 +47,10 @@ var colorPattern = regexp.MustCompile(`^[0-9a-fA-F]{6}$`)
 func NewWeb(s *Service) (http.Handler, error) {
 	w := &Web{s: s, csrf: rand.Text()}
 	funcs := template.FuncMap{
-		"next":  func(n int) int { return n + 1 },
-		"grams": func(n int64) string { return fmt.Sprintf("%.3f", float64(n)/1000) }, "weight": func(n *int64) string {
+		"printerName":       func(id string) string { return printerDisplayName(s.Config, id) },
+		"markerDescription": func(raw string) string { return markerDescription(s.Config, raw) },
+		"next":              func(n int) int { return n + 1 },
+		"grams":             func(n int64) string { return fmt.Sprintf("%.3f", float64(n)/1000) }, "weight": func(n *int64) string {
 			if n == nil {
 				return "—"
 			}
