@@ -90,6 +90,15 @@ func (s Session) TotalMG() int64 {
 	}
 	return n
 }
+func (s Session) UnassignedSections() int {
+	var n int
+	for _, section := range s.Sections {
+		if section.SpoolID == 0 {
+			n++
+		}
+	}
+	return n
+}
 func (s *Session) audit(action, detail string) {
 	s.History = append(s.History, History{time.Now().UTC(), action, detail})
 }
