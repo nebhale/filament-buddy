@@ -45,6 +45,7 @@ func (b *bulkHarness) session(closed bool) string {
 	if closed {
 		apply(b.t, b.s.Store, "M118 FB1 STOP c1 1 12000", at.Add(time.Minute))
 	}
+	assignUnassignedSpools(b.t, b.s.Store, id)
 	return id
 }
 func (b *bulkHarness) form(ids ...string) url.Values {

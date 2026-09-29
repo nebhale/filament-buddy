@@ -139,6 +139,7 @@ func TestDisplayNamePreservesAccountingAndSessionIdentity(t *testing.T) {
 	if closed.Title() != "Desk organizer" || closed.State != "closed" || closed.TotalMG() != 17000 {
 		t.Fatal(closed)
 	}
+	assignUnassignedSpools(t, s, id)
 	must(t, s.Archive(id, -1, true))
 	must(t, s.SetDisplayName(id, "Finished organizer", "Desk organizer"))
 	must(t, s.Close())

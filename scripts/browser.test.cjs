@@ -298,6 +298,11 @@ if (!snapshot) test('uncertain saves keep the draft and wait for resynchronizati
 
 test('library insertion and removal keep a surviving visible row anchored', { timeout: 30000 }, async t => {
   const page = await pageFor(t, { mobile: true });
+  if (!snapshot) {
+    const ids = await page.locator('.session-row').evaluateAll(rows => rows.map(row => row.getAttribute('href').split('/').pop()));
+    for (const id of ids) await assignSessionSpools(page, id);
+    await page.waitForFunction(() => !document.querySelector('.session-row .unassigned-spools'));
+  }
   await page.setViewportSize({ width: 390, height: 550 });
   await page.locator('.session-row').nth(2).evaluate(n => window.scrollTo(0, window.scrollY + n.getBoundingClientRect().top - 20));
   const key = await page.locator('.session-row').nth(3).getAttribute('data-key');
@@ -377,7 +382,7 @@ test('display names update every view, retain drafts, and resolve concurrent edi
   await other.close(); await library.close();
 });
 
-if (!snapshot) test('unassigned spool badges track saved assignments across tabs', { timeout: 30000 }, async t => {
+if (!snapshot) test('unassigned spools block archiving and clearing a spool restores the session across tabs', { timeout: 30000 }, async t => {
   const library = await pageFor(t);
   const catalog = await library.request.post(`${address}/demo/catalog`, { data: [{ ID: 7, Label: '#7 · Purple PLA', Color: '8844aa' }] });
   assert.equal(catalog.status(), 204);
@@ -400,17 +405,55 @@ if (!snapshot) test('unassigned spool badges track saved assignments across tabs
   await library.waitForFunction(name => [...document.querySelectorAll('.session-row')].find(n => n.textContent.includes(name))?.querySelector('.unassigned-spools')?.textContent === '2 unassigned', title);
   assert.equal(await page.locator('#summary .unassigned-spools').textContent(), '2 unassigned');
   await marker(page, 'STOP c1 1 12000');
-  await page.getByRole('button', { name: 'Archive session', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Archive session', exact: true }).click();
+  const archive = page.getByRole('button', { name: 'Archive session', exact: true });
+  await archive.waitFor();
+  assert.equal(await archive.isDisabled(), true);
+  const id = page.url().split('/').pop();
+  assert.equal(await bulkBox(library, id).isDisabled(), true);
+  await page.getByText('Assign a spool to every section before archiving this session.', { exact: true }).waitFor();
+  await screenshot(page, 'archive-unassigned-desktop');
+  await page.setViewportSize({ width: 390, height: 844 });
+  assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+  await screenshot(page, 'archive-unassigned-mobile');
+  await choose(page, 0, 'purple', 7); await save(page, 0);
+  assert.equal(await archive.isDisabled(), true, 'unreached sections must also have a spool');
+  await choose(page, 1, 'purple', 7); await save(page, 1);
+  await page.waitForFunction(() => !document.querySelector('#manage button').disabled);
+  await library.waitForFunction(value => !document.querySelector(`[data-session-select][value="${value}"]`).disabled, id);
+  await archive.click();
+  await page.waitForFunction(() => document.querySelector('#session-notices').textContent.includes('archived'));
   await library.goto(address + '/?archived=true');
-  await row.locator('.unassigned-spools').waitFor();
-  assert.equal(await row.locator('.unassigned-spools').textContent(), '2 unassigned');
-  await screenshot(library, 'unassigned-archived-desktop');
-  await library.setViewportSize({ width: 390, height: 844 });
-  assert.equal(await library.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
-  await screenshot(library, 'unassigned-archived-mobile');
-  await page.close();
+  await row.waitFor();
+  assert.equal(await row.locator('.unassigned-spools').count(), 0);
+  const main = await library.context().newPage(); await main.goto(address);
+  assert.equal(await main.locator(`.session-row[href="/sessions/${id}"]`).count(), 0);
+  await choose(page, 0, '', 0);
+  assert.equal(await row.count(), 1, 'an unsaved draft does not restore the session');
+  await save(page, 0);
+  await row.waitFor({ state: 'detached' });
+  await main.locator(`.session-row[href="/sessions/${id}"] .unassigned-spools`).waitFor();
+  assert.equal(await main.locator(`.session-row[href="/sessions/${id}"] .unassigned-spools`).textContent(), '1 unassigned');
+  assert.equal(await bulkBox(main, id).isDisabled(), true);
+  assert.equal(await archive.isDisabled(), true);
+  const stored = await (await page.request.get(`${address}/api/sessions/${id}`)).json();
+  assert.equal(stored.Archived, false);
+  assert.equal(stored.Sections[0].SpoolID, 0);
+  await page.reload();
+  assert.equal(await archive.isDisabled(), true);
+  await main.close(); await page.close();
 });
+
+async function assignSessionSpools(page, id) {
+  const record = await (await page.request.get(`${address}/api/sessions/${id}`)).json();
+  const live = await (await page.request.get(`${address}/api/live?view=session&id=${id}`)).json();
+  for (const section of record.Sections) if (section.SpoolID === 0) {
+    const response = await page.request.post(`${address}/sessions/${id}/spool`, {
+      headers: { Accept: 'application/json' },
+      form: { csrf: live.csrf, revision: String(live.revision), section: section.ID, spool: '7', expected_spool: '0' },
+    });
+    assert.equal(response.status(), 200);
+  }
+}
 
 let bulkSequence = 0;
 async function bulkSessions(page, count = 2) {
@@ -422,7 +465,12 @@ async function bulkSessions(page, count = 2) {
     await marker(page, snapshot ? `STOP ${printer} 1` : `STOP ${printer} 1 ${1000 + bulkSequence}`);
     const row = page.locator('.session-row').filter({ hasText: title });
     await row.waitFor();
-    ids.push((await row.getAttribute('href')).split('/').pop());
+    const id = (await row.getAttribute('href')).split('/').pop();
+    ids.push(id);
+    if (!snapshot) {
+      await assignSessionSpools(page, id);
+      await page.waitForFunction(value => document.querySelector(`[data-session-select][value="${value}"]`)?.dataset.eligible === 'true', id);
+    }
   }
   return ids;
 }

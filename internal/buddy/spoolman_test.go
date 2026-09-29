@@ -141,6 +141,9 @@ func TestAccountingTransfersAndOverrides(t *testing.T) {
 	}
 	must(t, s.Archive(id, -1, true))
 	must(t, s.SetSection(id, sid, -1, 0, nil, false))
+	if get(t, s, id).Archived {
+		t.Fatal("clearing the spool did not restore the session")
+	}
 	drain(t, c)
 	if f.used[1] != 105000 {
 		t.Fatal("archived edit failed")

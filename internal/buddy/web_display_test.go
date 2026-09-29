@@ -59,6 +59,7 @@ func TestVisiblePrinterNames(t *testing.T) {
 			t.Fatal("printer name was not escaped")
 		}
 	}
+	assignUnassignedSpools(t, s, id)
 	must(t, s.Archive(id, -1, true))
 	archived := httptest.NewRecorder()
 	h.ServeHTTP(archived, httptest.NewRequest("GET", "/?archived=true", nil))

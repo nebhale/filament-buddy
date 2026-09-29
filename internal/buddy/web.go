@@ -228,6 +228,8 @@ func (w *Web) fail(rw http.ResponseWriter, err error) {
 	} else if errors.Is(err, ErrNotFound) {
 		status = 404
 		message = "Session or section not found."
+	} else if errors.Is(err, ErrUnassignedSpools) {
+		status, message = 409, ErrUnassignedSpools.Error()
 	} else if errors.Is(err, ErrConflict) {
 		status = 409
 		message = err.Error()
