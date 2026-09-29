@@ -31,6 +31,10 @@ type Setup struct {
 	Snippets Snippets
 }
 type Page struct {
+	BulkAction                                   string
+	Bulk                                         *bulkReply
+	Selected                                     map[string]bool
+	ReturnURL                                    string
 	Live                                         bool
 	View, Title, CSRF, Error, SpoolError, Filter string
 	Printers                                     []PrinterStatus
@@ -104,6 +108,8 @@ func NewWeb(s *Service) (http.Handler, error) {
 	mux.HandleFunc("GET /setup", w.setup)
 	mux.HandleFunc("GET /api/live", w.live)
 	mux.HandleFunc("GET /api/events", func(rw http.ResponseWriter, r *http.Request) { serveEvents(rw, r, &s.Store.changes, w.csrf) })
+	mux.HandleFunc("POST /sessions/bulk/archive", w.bulkSessions)
+	mux.HandleFunc("POST /sessions/bulk/restore", w.bulkSessions)
 	mux.HandleFunc("GET /sessions/{id}", w.session)
 	mux.HandleFunc("POST /sessions/{id}/name", w.renameSession)
 	mux.HandleFunc("GET /api/status", func(rw http.ResponseWriter, r *http.Request) {
@@ -231,21 +237,7 @@ func (w *Web) fail(rw http.ResponseWriter, err error) {
 	w.render(rw, status, Page{View: "error", Title: "Unable to complete request", Error: message})
 }
 func (w *Web) dashboard(rw http.ResponseWriter, r *http.Request) {
-	p := Page{View: "dashboard", Title: "Print library", Filter: r.URL.Query().Get("printer"), Archived: r.URL.Query().Get("archived") == "true"}
-	p.Page, _ = strconv.Atoi(r.URL.Query().Get("page"))
-	p.Page = max(0, min(100000, p.Page))
-	p.Previous = max(0, p.Page-1)
-	var err error
-	p.Sessions, err = w.s.Store.List(p.Filter, p.Archived, p.Page*50)
-	if err != nil {
-		w.fail(rw, err)
-		return
-	}
-	p.More = len(p.Sessions) > 50
-	if p.More {
-		p.Sessions = p.Sessions[:50]
-	}
-	p.Printers, err = w.s.Status()
+	p, err := w.libraryPage(r.URL.Query())
 	if err != nil {
 		w.fail(rw, err)
 		return
