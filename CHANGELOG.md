@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Require an assigned spool on every section before archiving a session,
+  including bulk archive. Saving No spool on an archived session automatically
+  restores it to the print library and records the restoration in its history.
+
 - Select multiple sessions on the current library page to
   archive closed sessions or restore archived sessions. Report partial results,
   preserve selection through live updates, and reconcile lost responses without

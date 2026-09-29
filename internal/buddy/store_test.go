@@ -80,6 +80,7 @@ func TestLifecycle(t *testing.T) {
 	if len(ss.Sections[1].Operations) != 1 || ss.Sections[1].Operations[0].DeltaMG != 5000 {
 		t.Fatal("did not enqueue charge")
 	}
+	assignUnassignedSpools(t, s, id)
 	must(t, s.Archive(id, -1, true))
 	ss = get(t, s, id)
 	if !ss.Archived {

@@ -2,6 +2,7 @@ package buddy
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http/httptest"
 	"regexp"
 	"strconv"
@@ -72,10 +73,13 @@ func TestUnassignedSpoolBadgesFollowSavedAssignments(t *testing.T) {
 	check(false, 1)
 	apply(t, store, "M118 FB1 STOP c1 1 12000", at.Add(time.Second))
 	check(false, 1)
-	must(t, store.Archive(id, -1, true))
-	check(true, 1)
+	if err := store.Archive(id, -1, true); !errors.Is(err, ErrUnassignedSpools) {
+		t.Fatal(err)
+	}
 	must(t, store.SetSection(id, session.Sections[1].ID, -1, 7, nil, false))
+	check(false, 0)
+	must(t, store.Archive(id, -1, true))
 	check(true, 0)
 	must(t, store.SetSection(id, session.Sections[0].ID, -1, 0, nil, false))
-	check(true, 1)
+	check(false, 1)
 }

@@ -17,6 +17,7 @@ import (
 
 var ErrNotFound = errors.New("not found")
 var ErrConflict = errors.New("conflict; reload the page and check the section status")
+var ErrUnassignedSpools = errors.New("Assign a spool to every section before archiving this session.")
 
 type Store struct {
 	changes changes
@@ -448,6 +449,10 @@ func (s *Store) setSection(id, sid string, rev, spool int, override *int64, edit
 		} else {
 			v.SpoolID = spool
 			ss.audit("spool assignment", fmt.Sprintf("Section %d → spool %d", v.Number, spool))
+			if spool == 0 && ss.Archived {
+				ss.Archived = false
+				ss.audit("archive", fmt.Sprintf("false: automatically restored because Section %d has no assigned spool", v.Number))
+			}
 		}
 		return nil
 	})
@@ -505,6 +510,9 @@ func (s *Store) Archive(id string, rev int, archive bool) error {
 	return s.Edit(id, rev, func(ss *Session) error {
 		if ss.State != "closed" {
 			return ErrConflict
+		}
+		if archive && ss.UnassignedSections() > 0 {
+			return fmt.Errorf("%w: %w", ErrConflict, ErrUnassignedSpools)
 		}
 		ss.Archived = archive
 		ss.audit("archive", fmt.Sprint(archive))

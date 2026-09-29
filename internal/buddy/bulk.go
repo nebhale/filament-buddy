@@ -119,6 +119,8 @@ func (w *Web) bulkSessions(rw http.ResponseWriter, r *http.Request) {
 		switch {
 		case err == nil:
 			successes++
+		case errors.Is(err, ErrUnassignedSpools):
+			result.Status, result.Error = "conflict", ErrUnassignedSpools.Error()
 		case errors.Is(err, ErrConflict):
 			result.Status, result.Error = "conflict", "This session changed or is still active. Review its current state before trying again."
 		case errors.Is(err, ErrNotFound):
