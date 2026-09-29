@@ -200,6 +200,24 @@ Spool assignments never change physical spool locations. FilaBridge's old histor
 is not imported. Disable competing consumption tracking for these prints before
 using Filament Buddy, or both applications will charge them.
 
+## Selecting multiple sessions
+
+Use the checkboxes in the print library to select closed sessions, or choose
+**Select all on this page**. Selection stays on the current page and clears when
+you change pages or printer filters. Live updates retain selections for sessions
+still on that page; new arrivals are never selected automatically.
+
+Choose **Archive selected** to hide those sessions while keeping their sections,
+spool adjustments, and editable history. In **View archived sessions**, use
+**Restore selected** to return them to the library. Neither action needs a
+confirmation. Active sessions must be closed individually before selecting them.
+
+Bulk actions report each blocked or failed session and process the others.
+Successful selections clear; remaining selections can be reviewed before retrying.
+If the response is lost, the browser checks the submitted sessions before enabling
+another attempt and never automatically repeats the action. Individual checkbox
+selection and bulk actions also work without JavaScript.
+
 ## Live updates and remote access
 
 The print library and session pages update automatically. A **Live** indicator
