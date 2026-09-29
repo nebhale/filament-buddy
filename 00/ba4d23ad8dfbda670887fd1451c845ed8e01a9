@@ -1,0 +1,46 @@
+internal/buddy/unassigned_sections_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 5,76-78,80-81,84
+README.md
+  s_ab7fe54385135a::t_138662796b11c4 197-201,217-218
+internal/buddy/bulk.go
+  s_ab7fe54385135a::t_1ecaf64d2af6f5 122-123
+internal/buddy/bulk_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 48
+internal/buddy/session_name_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 142
+internal/buddy/store.go
+  s_ab7fe54385135a::t_1ecaf64d2af6f5 20,452-455,514-515
+  s_ab7fe54385135a::t_da2e99245b8a53 516
+internal/buddy/web/pages.html
+  s_ab7fe54385135a::t_1cafc8f9f80225 24,30,42
+internal/buddy/spoolman_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 144-146
+internal/buddy/archive_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 1-158
+internal/buddy/store_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 83
+internal/buddy/web.go
+  s_ab7fe54385135a::t_1ecaf64d2af6f5 231-232
+internal/buddy/web_display_test.go
+  s_ab7fe54385135a::t_40ce9e28a957b6 62
+CHANGELOG.md
+  s_ab7fe54385135a::t_138662796b11c4 5-8
+scripts/browser.test.cjs
+  s_ab7fe54385135a::t_d66e7a211b402b 301-305,385,408-424,426-443,446-457,468-473
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "00ba4d23ad8dfbda670887fd1451c845ed8e01a9",
+  "prompts": {},
+  "sessions": {
+    "s_ab7fe54385135a": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0e7ea-2fd3-7bd1-8561-9698c827ff9a",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
