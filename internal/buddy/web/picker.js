@@ -33,7 +33,9 @@ class SpoolPicker {
     const results = this.results = document.createElement("div"); results.id = `${id}-results`; results.setAttribute("role", "listbox"); results.setAttribute("aria-label", "Matching spools");
     const count = this.count = document.createElement("p"); count.className = "picker-count"; count.setAttribute("role", "status"); count.setAttribute("aria-live", "polite");
     const freshness = this.freshness = document.createElement("p"); freshness.className = "picker-freshness";
-    popup.append(tools, results, count); root.append(label, input, selected, freshness, popup);
+    const status = document.createElement("div"); status.className = "picker-status";
+    status.append(selected, freshness);
+    popup.append(tools, results, count); root.append(label, input, status, popup);
     form.insertBefore(root, form.querySelector(".form-row"));
     input.addEventListener("focus", () => this.open());
     input.addEventListener("input", () => { this.query = input.value; this.highlight = null; this.open(); });
