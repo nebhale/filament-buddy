@@ -1,0 +1,38 @@
+internal/buddy/models.go
+  s_119bc38ec57a50::t_17dc1d6bc7b2a4 93-101
+internal/buddy/web/picker.js
+  s_119bc38ec57a50::t_2a097403b9e0df 36-38
+internal/buddy/web/pages.html
+  s_119bc38ec57a50::t_5122116d0bcd3a 30
+  s_119bc38ec57a50::t_2a097403b9e0df 33,35-36
+  s_119bc38ec57a50::t_0d30bf8050a9e3 28-29,34
+scripts/browser.test.cjs
+  s_119bc38ec57a50::t_243ed20b23d7cf 58,61,64-67,69-73,75-81
+  s_119bc38ec57a50::t_0d98ba4102b9f7 68,74,88,94
+  s_119bc38ec57a50::t_bc310a819f9fa3 379-381,384-413
+  s_119bc38ec57a50::t_2c668e2c371a25 382-383
+  s_119bc38ec57a50::t_cd8a5aa4cd886e 83-87,89-93,95-122
+  s_119bc38ec57a50::t_b094575c9d1870 82
+internal/buddy/web/style.css
+  s_119bc38ec57a50::t_0d30bf8050a9e3 42-43
+  s_119bc38ec57a50::t_c915a2eec02f01 170-171,173-174,176
+  s_119bc38ec57a50::t_2a097403b9e0df 19,96-100,106-107,164,178-180,188,192,194
+internal/buddy/unassigned_sections_test.go
+  s_119bc38ec57a50::t_bc310a819f9fa3 1-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "2eb26e2fe285e12d2615a9d965343da8d4a3ff93",
+  "prompts": {},
+  "sessions": {
+    "s_119bc38ec57a50": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0e7ea-ebc6-7e21-a6eb-9b0f4a7ef20b",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
