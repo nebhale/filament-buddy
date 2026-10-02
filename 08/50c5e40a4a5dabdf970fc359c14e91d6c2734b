@@ -1,0 +1,66 @@
+internal/buddy/web/picker.js
+  s_60bd33365157f3::t_5e230c773d7ae0 12-21,25,30-39,41,55,57-68,70,73,80-81,93,98-127,132,144,146-150,155
+  s_60bd33365157f3::t_a8493b10184dcb 54,84,145
+  s_60bd33365157f3::t_eaa85577070412 43,82-83,88,151-154,156-157,184,198,207,211,213
+internal/buddy/web_test.go
+  s_60bd33365157f3::t_78f7cb83bd3909 9,65-81
+  s_60bd33365157f3::t_c79d91b96cda6c 82
+internal/buddy/spoolman_test.go
+  s_60bd33365157f3::t_78f7cb83bd3909 90,100,106,113,118,123,129,145,172,183,201,213,242
+CHANGELOG.md
+  s_60bd33365157f3::t_87f362f22ac308 3,5-18,27-28
+CONTRIBUTING.md
+  s_60bd33365157f3::t_a4ecfa9bd59160 35,44-46,76-79
+README.md
+  s_60bd33365157f3::t_2c10a71d639ac6 23-26,102-103,129-130,147-150,165-167,209-211,244,252-259,265-266,269-270
+internal/buddy/archive_test.go
+  s_60bd33365157f3::t_fd7eab2277a48e 18,67,69,74,76,82,84,121
+internal/buddy/bulk.go
+  s_60bd33365157f3::t_4e4b53a8d56419 35,162
+internal/buddy/session_name_test.go
+  s_60bd33365157f3::t_1611964aff602e 110
+internal/buddy/store.go
+  s_60bd33365157f3::t_cfe5dc216acd2a 409-410,413-416,418,424-425,430-434
+internal/buddy/store_test.go
+  s_60bd33365157f3::t_dd9a46f2cfee72 60,90,192-194,198,204,261-262
+internal/buddy/unassigned_sections_test.go
+  s_60bd33365157f3::t_96db6704b9abf7 72,79,83
+internal/buddy/updates_test.go
+  s_60bd33365157f3::t_d07f39730c0eed 15,20,23-24,27,161,164
+internal/buddy/web.go
+  s_60bd33365157f3::t_5909fad42ab7f7 36,293,296
+internal/buddy/web/app.js
+  s_60bd33365157f3::t_550a39b535fe2f 23-25
+internal/buddy/web/bulk.js
+  s_60bd33365157f3::t_7376c17f966b93 14-22,37,42-51,65-76,85,103
+internal/buddy/web/name.js
+  s_60bd33365157f3::t_f3675e1319a61f 1-78
+internal/buddy/web/pages.html
+  s_60bd33365157f3::t_de03589ad4742d 1,7-9,12,15,19,21,23-30,36,38-39,41-43,47,56,58
+internal/buddy/web/setup.js
+  s_60bd33365157f3::t_d5bcc93d7ce9a6 1-77
+internal/buddy/web/style.css
+  s_60bd33365157f3::t_a5c6999ab90cb2 33,74,97,135-136,143,178,182,184-201,204-209,212,217-221,226-281
+internal/buddy/web/updates.js
+  s_60bd33365157f3::t_7b214a7a13158f 17,43,161-162,165-187,270-273,291,321,329-335,363-364,383
+scripts/browser.test.cjs
+  s_60bd33365157f3::t_3f0ac33f0da814 47-50,52,61,88-242,257-260,262-263,268-269,361,363,398,489-610,630,633,637,651,653-654,657-658,686,703,776-817,820,853,874,885,908,923-926,929,937,946-947,949-952,963-968,979-1071
+scripts/demo/main.go
+  s_60bd33365157f3::t_f5324d019af385 47-48,51,60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "0850c5e40a4a5dabdf970fc359c14e91d6c2734b",
+  "prompts": {},
+  "sessions": {
+    "s_60bd33365157f3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a0f32b-f226-7c71-a5e7-1f33ef62dafc",
+        "model": "gpt-6-astra"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
