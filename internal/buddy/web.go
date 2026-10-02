@@ -13,7 +13,6 @@ import (
 	"io/fs"
 	"log/slog"
 	"net/http"
-	"regexp"
 	"strconv"
 	"strings"
 )
@@ -34,6 +33,7 @@ type Page struct {
 	BulkAction                                   string
 	Bulk                                         *bulkReply
 	Selected                                     map[string]bool
+	Selecting                                    bool
 	ReturnURL                                    string
 	Live                                         bool
 	View, Title, CSRF, Error, SpoolError, Filter string
@@ -47,8 +47,6 @@ type Page struct {
 	More                                         bool
 }
 
-var colorPattern = regexp.MustCompile(`^[0-9a-fA-F]{6}$`)
-
 func NewWeb(s *Service) (http.Handler, error) {
 	w := &Web{s: s, csrf: rand.Text()}
 	funcs := template.FuncMap{
@@ -60,12 +58,6 @@ func NewWeb(s *Service) (http.Handler, error) {
 				return "—"
 			}
 			return fmt.Sprintf("%.3f g", float64(*n)/1000)
-		},
-		"value": func(n *int64) string {
-			if n == nil {
-				return ""
-			}
-			return fmt.Sprintf("%.3f", float64(*n)/1000)
 		},
 		"hasSpool": func(id int, spools []Spool) bool {
 			for _, v := range spools {
@@ -85,14 +77,6 @@ func NewWeb(s *Service) (http.Handler, error) {
 				}
 			}
 			return fmt.Sprintf("Spool #%d (unavailable)", id)
-		},
-		"color": func(id int, spools []Spool) string {
-			for _, v := range spools {
-				if v.ID == id && colorPattern.MatchString(v.Color) {
-					return "#" + v.Color
-				}
-			}
-			return "#9a8daf"
 		},
 		"pending": func(state string) bool {
 			return state == "uncertain" || state == "conflict" || state == "pending" || state == "inflight"
@@ -266,27 +250,6 @@ func (w *Web) setup(rw http.ResponseWriter, r *http.Request) {
 	}
 	w.render(rw, 200, p)
 }
-func parseMG(v string) (*int64, error) {
-	if v == "" {
-		return nil, nil
-	}
-	if !regexp.MustCompile(`^\d{1,6}(\.\d{1,3})?$`).MatchString(v) {
-		return nil, ErrConflict
-	}
-	parts := strings.SplitN(v, ".", 2)
-	whole, _ := strconv.ParseInt(parts[0], 10, 64)
-	fraction := ""
-	if len(parts) == 2 {
-		fraction = parts[1]
-	}
-	fraction += strings.Repeat("0", 3-len(fraction))
-	f, _ := strconv.ParseInt(fraction, 10, 64)
-	mg := whole*1000 + f
-	if mg > MaxMilligrams {
-		return nil, ErrConflict
-	}
-	return &mg, nil
-}
 func (w *Web) mutate(rw http.ResponseWriter, r *http.Request) {
 	id, action := r.PathValue("id"), r.PathValue("action")
 	rev, err := strconv.Atoi(r.PostForm.Get("revision"))
@@ -327,25 +290,10 @@ func (w *Web) mutate(rw http.ResponseWriter, r *http.Request) {
 				if e != nil || expected < 0 {
 					err = ErrConflict
 				} else {
-					err = w.s.Store.SetSectionExpected(id, sid, n, nil, false, SectionExpectation{Spool: expected})
+					err = w.s.Store.SetSpoolExpected(id, sid, n, expected)
 				}
 			} else {
-				err = w.s.Store.SetSection(id, sid, rev, n, nil, false)
-			}
-		}
-	case "weight":
-		var mg *int64
-		mg, err = parseMG(r.PostForm.Get("grams"))
-		if err == nil {
-			if values, ok := r.PostForm["expected_override"]; ok && strings.Contains(r.Header.Get("Accept"), "application/json") {
-				expected, e := parseMG(values[0])
-				if e != nil {
-					err = ErrConflict
-				} else {
-					err = w.s.Store.SetSectionExpected(id, sid, 0, mg, true, SectionExpectation{Override: expected})
-				}
-			} else {
-				err = w.s.Store.SetSection(id, sid, rev, 0, mg, true)
+				err = w.s.Store.SetSpool(id, sid, rev, n)
 			}
 		}
 	case "resolve":

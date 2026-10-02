@@ -87,7 +87,7 @@ func drain(t *testing.T, c *Spoolman) {
 	}
 	t.Fatal("sync did not settle")
 }
-func TestAccountingTransfersAndOverrides(t *testing.T) {
+func TestAccountingTransfers(t *testing.T) {
 	s := testStore(t)
 	c, f := fakeClient(t, s)
 	id, sid := completed(t, s)
@@ -97,50 +97,36 @@ func TestAccountingTransfersAndOverrides(t *testing.T) {
 	if len(spools) != 3 {
 		t.Fatal("catalog incomplete")
 	}
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 1))
 	drain(t, c)
 	if f.used[1] != 112000 {
 		t.Fatal(f.used)
 	}
 	writes := f.writes
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 1))
 	drain(t, c)
 	if f.writes != writes {
 		t.Fatal("same assignment charged twice")
 	}
 	// An unrelated later consumption must survive every correction.
 	f.used[1] += 5000
-	must(t, s.SetSection(id, sid, -1, 2, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 2))
 	drain(t, c)
 	if f.used[1] != 105000 || f.used[2] != 212000 {
 		t.Fatal(f.used)
 	}
-	must(t, s.SetSection(id, sid, -1, 0, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 0))
 	drain(t, c)
 	if f.used[2] != 200000 {
 		t.Fatal(f.used)
 	}
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
-	drain(t, c)
-	if f.used[1] != 117000 {
-		t.Fatal(f.used)
-	}
-	must(t, s.SetSection(id, sid, -1, 0, ptr(10000), true))
-	drain(t, c)
-	if f.used[1] != 115000 {
-		t.Fatal(f.used)
-	}
-	ss := get(t, s, id)
-	if *ss.Sections[0].ReportedMG != 12000 {
-		t.Fatal("override destroyed report")
-	}
-	must(t, s.SetSection(id, sid, -1, 0, nil, true))
+	must(t, s.SetSpool(id, sid, -1, 1))
 	drain(t, c)
 	if f.used[1] != 117000 {
 		t.Fatal(f.used)
 	}
 	must(t, s.Archive(id, -1, true))
-	must(t, s.SetSection(id, sid, -1, 0, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 0))
 	if get(t, s, id).Archived {
 		t.Fatal("clearing the spool did not restore the session")
 	}
@@ -156,7 +142,7 @@ func TestUncertainDoesNotReplay(t *testing.T) {
 			c, f := fakeClient(t, s)
 			id, sid := completed(t, s)
 			f.mode = mode
-			must(t, s.SetSection(id, sid, -1, 1, nil, false))
+			must(t, s.SetSpool(id, sid, -1, 1))
 			drain(t, c)
 			if f.writes != 1 || f.used[1] != 112000 {
 				t.Fatal(f.used)
@@ -183,7 +169,7 @@ func TestConflictAndOffline(t *testing.T) {
 	s := testStore(t)
 	c, f := fakeClient(t, s)
 	id, sid := completed(t, s)
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 1))
 	f.mode = "offline"
 	drain(t, c)
 	ss := get(t, s, id)
@@ -194,7 +180,7 @@ func TestConflictAndOffline(t *testing.T) {
 	must(t, s.Edit(id, -1, func(ss *Session) error { ss.Sections[0].Operations[0].NextAttempt = time.Time{}; return nil }))
 	drain(t, c)
 	f.used[1] = 1000
-	must(t, s.SetSection(id, sid, -1, 2, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 2))
 	drain(t, c)
 	ss = get(t, s, id)
 	var conflict Operation
@@ -212,7 +198,7 @@ func TestConflictAndOffline(t *testing.T) {
 	if f.used[1] != 0 || f.used[2] != 212000 {
 		t.Fatal(f.used)
 	}
-	must(t, s.SetSection(id, sid, -1, 999, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 999))
 	drain(t, c)
 	ss = get(t, s, id)
 	if ss.Sections[0].SyncStatus() != "conflict" {
@@ -224,7 +210,7 @@ func TestCrashRecovery(t *testing.T) {
 	s, err := OpenStore(dir)
 	must(t, err)
 	id, sid := completed(t, s)
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 1))
 	w, err := s.Claim(time.Now())
 	must(t, err)
 	if w == nil {
@@ -253,7 +239,7 @@ func TestConcurrentEdits(t *testing.T) {
 		wg.Add(1)
 		go func(n int) {
 			defer wg.Done()
-			if err := s.SetSection(id, sid, -1, n%3, nil, false); err != nil {
+			if err := s.SetSpool(id, sid, -1, n%3); err != nil {
 				t.Error(err)
 			}
 		}(i)

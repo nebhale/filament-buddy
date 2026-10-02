@@ -12,7 +12,6 @@ Pi and x86 Linux, without a cloud service or software on the printer.
 - Multiple Buddy-firmware printers; sequential, single-nozzle M600 color swaps.
 - Automatically opened sessions and numbered sections, with recovery and manual close.
 - Prepare future spool assignments after a session starts.
-- Correct any observed section's weight while retaining the slicer's original value.
 - Persistent adjustment ledger, offline queue, and explicit ambiguous-request recovery.
 - Archived, editable history; no automatic deletion or retention limit.
 - Non-root ARM64/AMD64 images, YAML configuration, optional Basic authentication.
@@ -21,9 +20,10 @@ Pi and x86 Linux, without a cloud service or software on the printer.
 
 ![Session sections with synthetic demonstration data](docs/images/session.png)
 
-Open a session and choose **Edit display name** to give it a more useful name.
-This works for active and past sessions. Leave the field blank to restore the
-original name. Custom names appear in the library, printer card, and session
+Open a session and select the pencil beside its name to edit it inline. Press
+Enter or choose **Save name** to save; Escape or **Cancel** discards the draft.
+This works for active and past sessions. The original name appears as the
+placeholder when the field is empty. Save it blank to restore that name. Custom names appear in the library, printer card, and session
 page; the original name and received printer markers remain in the record.
 Names are local to each Buddy app, so edits in one app do not rename the other.
 
@@ -99,7 +99,8 @@ one direct destination cannot feed both applications.
 Both Buddy apps use readable `START` and `STOP` markers. Filament Buddy uses
 `CHANGE` for color boundaries; Snapshot Buddy uses `LAYER` for snapshots.
 
-The setup page generates labeled BEGIN/END blocks:
+The setup page shows the complete G-code beside a short explanation and paste
+location. Select a printer, then copy its labeled BEGIN/END blocks in this order:
 
 1. Append the START block to **Start G-code**.
 2. Insert the STOP block at the beginning of **End G-code**.
@@ -125,8 +126,8 @@ identify print runs: each session receives a unique generated ID.
 Set filament density correctly in PrusaSlicer. Reported grams remain unchanged
 when assigned to a different Spoolman filament. Values estimate slicer-accounted
 extrusion; firmware-controlled purging, load/unload, runout changes, and unreported
-custom extrusion may require a manual weight correction. MMU/tool switching and
-layer checkpoints are outside this version.
+custom extrusion may require a manual weight correction in Spoolman. MMU/tool
+switching and layer checkpoints are outside this version.
 
 ## Sessions and sections
 
@@ -143,10 +144,10 @@ sections; observed sections keep their identity. Prepared rows not reached befor
 closure remain `unreached` and never charge a spool.
 
 Active sections have unknown weight until the next boundary. Manual close retains
-completed sections and marks the unfinished section incomplete. You can supply
-its weight manually. After manual closure, color changes are ignored until a
-new START or service restart. There is no idle timeout. Active sessions and
-adjustment plans survive restarts.
+completed sections and marks the unfinished section incomplete. Adjust any
+unreported consumption directly in Spoolman. After manual closure, color changes
+are ignored until a new START or service restart. There is no idle timeout.
+Active sessions and adjustment plans survive restarts.
 
 Repeated START/STOP markers are deduplicated for five seconds across restarts;
 CHANGE bursts use two seconds, and completed section numbers deduplicate for the
@@ -161,9 +162,9 @@ All timestamps are stored in UTC and displayed in the browser's locale/time zone
 
 Selecting a spool charges its section's effective weight. Reassigning refunds
 the original spool before charging the replacement. **No spool** returns all
-previously charged weight, and the section can be assigned again later. An
-override replaces the effective weight; clearing the override restores the
-reported value (or unknown, if no report exists).
+previously charged weight, and the section can be assigned again later. Make
+manual weight corrections directly in Spoolman. Filament Buddy records weights
+from printer markers.
 
 Changes and adjustment plans commit together in SQLite. The worker sends signed
 `PUT /api/v1/spool/{id}/use` deltas, never overwriting Spoolman's total. Unrelated
@@ -205,8 +206,9 @@ using Filament Buddy, or both applications will charge them.
 
 ## Selecting multiple sessions
 
-Use the checkboxes in the print library to select closed sessions, or choose
-**Select all on this page**. Selection stays on the current page and clears when
+Choose **Select** in the print library to reveal the checkboxes, then select
+closed sessions or choose **Select all on this page**. **Cancel** clears the
+selection and hides the checkboxes. Selection stays on the current page and clears when
 you change pages or printer filters. Live updates retain selections for sessions
 still on that page; new arrivals are never selected automatically.
 
@@ -239,7 +241,7 @@ write automatically. Application restarts refresh page credentials while keeping
 drafts. If authentication expires, sign in in another tab and return to the draft.
 Ordinary HTML form submission remains available without JavaScript.
 
-Spool and weight edits compare the saved value you started editing inside the
+Spool assignments compare the saved value you started editing inside the
 mutation transaction. Unrelated section edits and worker progress do not reject
 these drafts. If the same value changes, **Use saved value** discards your draft;
 **Save my value** applies it only if the reviewed saved value has not changed
@@ -247,17 +249,25 @@ again. Session management, planning, and accounting resolution retain revision
 and operation checks. The existing uncertain-operation and inventory reconciliation
 rules remain authoritative. History updates are fetched while its panel is open.
 
+Each section shows its assigned spool once, beside its color and a pencil. Click
+the pencil, or **Assign spool** on an unassigned section, to edit in place.
+**Save spool** applies a selected result and returns to the compact row; **Cancel**
+or Escape discards the draft. The current selection appears as the search field’s
+placeholder. Clearing a search keeps that selection; choose **No spool** to remove
+an assignment. Searching alone does not create a draft or enable saving until you
+choose a result or clear the search.
+
 The spool combobox searches the shared cached catalog immediately, matching all
 space-separated words against ID, vendor, name, and material. Exact IDs rank
 first. Results include color, remaining weight when known, and archived status;
 up to 50 choices include **No spool**. Use **Include archived** to find retired
 spools; assigned and draft selections remain visible even if unavailable. Arrow
-keys move the highlight, Enter selects without submitting, and Escape dismisses.
-**Save spool** applies the selection. Searching alone does not create a draft.
+keys move the highlight and Enter selects a result without submitting. Press
+Enter again with the results closed to save the selection.
 
 The catalog still refreshes about once a minute. **Refresh catalog** requests an
-explicit refresh while cached results remain searchable. Freshness and failures
-appear beside the picker; refreshed catalogs preserve search text, draft selection,
+explicit refresh while cached results remain searchable. Refresh progress and
+failures appear beside the picker; refreshed catalogs preserve search text, draft selection,
 and keyboard highlight by ID. No keystroke makes a Spoolman request, and historical
 spool retention is unchanged.
 

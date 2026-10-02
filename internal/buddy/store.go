@@ -406,62 +406,35 @@ func section(ss *Session, id string) (*Section, error) {
 	return nil, ErrNotFound
 }
 
-// SectionExpectation compares the field the user actually edited, rather than
-// rejecting drafts because a worker advanced the whole-session revision.
-type SectionExpectation struct {
-	Spool    int
-	Override *int64
+func (s *Store) SetSpool(id, sid string, rev, spool int) error {
+	return s.setSpool(id, sid, rev, spool, nil)
 }
 
-func (s *Store) SetSection(id, sid string, rev, spool int, override *int64, editWeight bool) error {
-	return s.setSection(id, sid, rev, spool, override, editWeight, nil)
+// SetSpoolExpected compares the assignment the user edited, so worker progress
+// does not invalidate a draft by advancing the whole-session revision.
+func (s *Store) SetSpoolExpected(id, sid string, spool, expected int) error {
+	return s.setSpool(id, sid, -1, spool, &expected)
 }
-func (s *Store) SetSectionExpected(id, sid string, spool int, override *int64, editWeight bool, expected SectionExpectation) error {
-	return s.setSection(id, sid, -1, spool, override, editWeight, &expected)
-}
-func (s *Store) setSection(id, sid string, rev, spool int, override *int64, editWeight bool, expected *SectionExpectation) error {
+func (s *Store) setSpool(id, sid string, rev, spool int, expected *int) error {
 	return s.Edit(id, rev, func(ss *Session) error {
 		v, err := section(ss, sid)
 		if err != nil {
 			return err
 		}
-		if expected != nil {
-			matches := v.SpoolID == expected.Spool
-			if editWeight {
-				matches = (v.OverrideMG == nil && expected.Override == nil) || (v.OverrideMG != nil && expected.Override != nil && *v.OverrideMG == *expected.Override)
-			}
-			if !matches {
-				return fmt.Errorf("%w: this value changed while you were editing", ErrConflict)
-			}
+		if expected != nil && v.SpoolID != *expected {
+			return fmt.Errorf("%w: this value changed while you were editing", ErrConflict)
 		}
 		if spool < 0 {
 			return ErrConflict
 		}
-		if editWeight {
-			if v.State == "planned" || v.State == "unreached" {
-				return ErrConflict
-			}
-			if override != nil && (*override < 0 || *override > MaxMilligrams) {
-				return ErrConflict
-			}
-			v.OverrideMG = override
-			ss.audit("weight override", fmt.Sprintf("Section %d: %v", v.Number, weightText(override)))
-		} else {
-			v.SpoolID = spool
-			ss.audit("spool assignment", fmt.Sprintf("Section %d → spool %d", v.Number, spool))
-			if spool == 0 && ss.Archived {
-				ss.Archived = false
-				ss.audit("archive", fmt.Sprintf("false: automatically restored because Section %d has no assigned spool", v.Number))
-			}
+		v.SpoolID = spool
+		ss.audit("spool assignment", fmt.Sprintf("Section %d → spool %d", v.Number, spool))
+		if spool == 0 && ss.Archived {
+			ss.Archived = false
+			ss.audit("archive", fmt.Sprintf("false: automatically restored because Section %d has no assigned spool", v.Number))
 		}
 		return nil
 	})
-}
-func weightText(w *int64) string {
-	if w == nil {
-		return "reported value"
-	}
-	return fmt.Sprintf("%.3f g", float64(*w)/1000)
 }
 func (s *Store) Plan(id string, rev int, action, sid string) error {
 	return s.Edit(id, rev, func(ss *Session) error {

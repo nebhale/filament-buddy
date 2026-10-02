@@ -20,8 +20,6 @@ function renderTimestamp(target, value) {
  time.textContent = text;
  target.replaceChildren(time);
 }
-for (const button of document.querySelectorAll('.copy')) button.addEventListener('click', async () => {
- const code = button.parentElement.querySelector('code');
- try { await navigator.clipboard.writeText(code.textContent); button.textContent = 'G-code copied'; }
- catch { const range = document.createRange(); range.selectNodeContents(code); const selection = window.getSelection(); selection.removeAllRanges(); selection.addRange(range); button.textContent = 'Select the G-code and copy it with your browser'; }
-});
+for (const select of document.querySelectorAll('.filter select')) {
+ select.addEventListener('change', () => select.form.requestSubmit());
+}

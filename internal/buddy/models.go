@@ -25,7 +25,6 @@ type Section struct {
 	State      string
 	SpoolID    int
 	ReportedMG *int64
-	OverrideMG *int64
 	Applied    map[int]int64
 	Operations []Operation
 }
@@ -59,9 +58,6 @@ type Spool struct {
 func (s Section) Weight() *int64 {
 	if s.State == "planned" || s.State == "unreached" {
 		return nil
-	}
-	if s.OverrideMG != nil {
-		return s.OverrideMG
 	}
 	return s.ReportedMG
 }
