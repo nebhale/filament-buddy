@@ -44,11 +44,11 @@ func main() {
 		}
 	}
 	ss, _ := s.Get(id)
-	s.SetSection(id, ss.Sections[0].ID, -1, 7, nil, false)
-	s.SetSection(id, ss.Sections[1].ID, -1, 12, nil, false)
+	s.SetSpool(id, ss.Sections[0].ID, -1, 7)
+	s.SetSpool(id, ss.Sections[1].ID, -1, 12)
 	s.Plan(id, -1, "add", "")
 	ss, _ = s.Get(id)
-	s.SetSection(id, ss.Sections[3].ID, -1, 7, nil, false)
+	s.SetSpool(id, ss.Sections[3].ID, -1, 7)
 	for i, name := range []string{"Desk organizer", "Cable clips", "Plant marker set"} {
 		e, _ := buddy.ParseMarker("M118 FB1 START mini " + name)
 		e.ReceivedAt = at.Add(-time.Duration(i+1) * 24 * time.Hour)
@@ -57,7 +57,7 @@ func main() {
 		e.ReceivedAt = at.Add(-time.Duration(i+1)*24*time.Hour + time.Hour)
 		s.Apply(e)
 		v, _ := s.Get(old)
-		s.SetSection(old, v.Sections[0].ID, -1, 19, nil, false)
+		s.SetSpool(old, v.Sections[0].ID, -1, 19)
 	}
 	service := buddy.NewService(c, s)
 	h, err := buddy.NewWeb(service)

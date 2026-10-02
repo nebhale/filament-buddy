@@ -12,28 +12,19 @@ import (
 	"time"
 )
 
-func TestExpectedSectionEditsSurviveUnrelatedChanges(t *testing.T) {
+func TestExpectedSpoolEditsSurviveUnrelatedChanges(t *testing.T) {
 	s := testStore(t)
 	id, sid := completed(t, s)
 	original := get(t, s, id)
 	must(t, s.Edit(id, -1, func(ss *Session) error { ss.audit("sync", "background progress"); return nil }))
-	if err := s.SetSection(id, sid, original.Revision, 9, nil, false); !errors.Is(err, ErrConflict) {
+	if err := s.SetSpool(id, sid, original.Revision, 9); !errors.Is(err, ErrConflict) {
 		t.Fatal("legacy revision protection lost", err)
 	}
-	must(t, s.SetSectionExpected(id, sid, 9, nil, false, SectionExpectation{}))
-	if err := s.SetSectionExpected(id, sid, 12, nil, false, SectionExpectation{}); !errors.Is(err, ErrConflict) {
+	must(t, s.SetSpoolExpected(id, sid, 9, 0))
+	if err := s.SetSpoolExpected(id, sid, 12, 0); !errors.Is(err, ErrConflict) {
 		t.Fatal("concurrent assignment overwritten", err)
 	}
-	must(t, s.SetSectionExpected(id, sid, 12, nil, false, SectionExpectation{Spool: 9}))
-	weight := int64(12500)
-	must(t, s.SetSectionExpected(id, sid, 0, &weight, true, SectionExpectation{}))
-	if err := s.SetSectionExpected(id, sid, 0, nil, true, SectionExpectation{}); !errors.Is(err, ErrConflict) {
-		t.Fatal("concurrent weight overwritten", err)
-	}
-	must(t, s.SetSectionExpected(id, sid, 0, nil, true, SectionExpectation{Override: &weight}))
-	if get(t, s, id).Sections[0].OverrideMG != nil {
-		t.Fatal("reported weight not restored")
-	}
+	must(t, s.SetSpoolExpected(id, sid, 12, 9))
 }
 
 func TestLiveViewsAndEnhancedForms(t *testing.T) {
@@ -167,18 +158,12 @@ func TestExpectedEditsPreserveInventoryAfterWorkerProgress(t *testing.T) {
 	s := testStore(t)
 	c, inventory := fakeClient(t, s)
 	id, sid := completed(t, s)
-	must(t, s.SetSectionExpected(id, sid, 1, nil, false, SectionExpectation{}))
+	must(t, s.SetSpoolExpected(id, sid, 1, 0))
 	drain(t, c)               // Changes session revision without changing the assigned spool.
 	inventory.used[1] += 5000 // Independent external consumption must survive.
-	must(t, s.SetSectionExpected(id, sid, 2, nil, false, SectionExpectation{Spool: 1}))
+	must(t, s.SetSpoolExpected(id, sid, 2, 1))
 	drain(t, c)
 	if inventory.used[1] != 105000 || inventory.used[2] != 212000 {
-		t.Fatal(inventory.used)
-	}
-	weight := int64(15000)
-	must(t, s.SetSectionExpected(id, sid, 0, &weight, true, SectionExpectation{}))
-	drain(t, c)
-	if inventory.used[1] != 105000 || inventory.used[2] != 215000 {
 		t.Fatal(inventory.used)
 	}
 }

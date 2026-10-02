@@ -57,7 +57,7 @@ func TestLifecycle(t *testing.T) {
 	ss = get(t, s, id)
 	second := ss.Sections[1].ID
 	third := ss.Sections[2].ID
-	must(t, s.SetSection(id, second, -1, 42, nil, false))
+	must(t, s.SetSpool(id, second, -1, 42))
 	must(t, s.Plan(id, -1, "down", second))
 	ss = get(t, s, id)
 	if ss.Sections[2].ID != second || ss.Sections[1].ID != third {
@@ -87,7 +87,7 @@ func TestLifecycle(t *testing.T) {
 		t.Fatal("not archived")
 	}
 	must(t, s.Archive(id, -1, false))
-	if err := s.SetSection(id, ss.Sections[2].ID, -1, 0, ptr(100), true); !errors.Is(err, ErrConflict) {
+	if section := get(t, s, id).Sections[2]; section.Weight() != nil || len(section.Operations) != 0 {
 		t.Fatal("charged unreached section")
 	}
 }
@@ -189,19 +189,19 @@ func TestPendingCoalesces(t *testing.T) {
 	apply(t, s, "M118 FB1 STOP c1 1 10000", at.Add(time.Second))
 	ss := get(t, s, id)
 	sid := ss.Sections[0].ID
-	must(t, s.SetSection(id, sid, -1, 1, nil, false))
-	must(t, s.SetSection(id, sid, -1, 2, nil, false))
-	must(t, s.SetSection(id, sid, -1, 0, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 1))
+	must(t, s.SetSpool(id, sid, -1, 2))
+	must(t, s.SetSpool(id, sid, -1, 0))
 	if w, err := s.Claim(time.Now()); err != nil || w != nil {
 		t.Fatalf("unassigned section still charged: %+v %v", w, err)
 	}
-	must(t, s.SetSection(id, sid, -1, 2, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 2))
 	w, err := s.Claim(time.Now())
 	must(t, err)
 	if w == nil || w.Operation.DeltaMG != 10000 {
 		t.Fatal(w)
 	}
-	must(t, s.SetSection(id, sid, -1, 3, nil, false))
+	must(t, s.SetSpool(id, sid, -1, 3))
 	must(t, s.Finish(*w, "applied", "", nil))
 	ss = get(t, s, id)
 	if ss.Sections[0].Applied[2] != 10000 {
@@ -217,21 +217,6 @@ func TestPendingCoalesces(t *testing.T) {
 		t.Fatal("replacement charge bypassed failed refund")
 	}
 }
-func TestFixedPrecision(t *testing.T) {
-	for _, v := range []string{"0", "0.001", "12.34", "999999.999"} {
-		mg, err := parseMG(v)
-		must(t, err)
-		if mg == nil {
-			t.Fatal(v)
-		}
-	}
-	for _, v := range []string{"NaN", "-1", "1.0001", "1e3", "1000000"} {
-		if _, err := parseMG(v); err == nil {
-			t.Fatal(fmt.Sprintf("accepted %s", v))
-		}
-	}
-}
-
 func TestLifecycleBurstSurvivesRestart(t *testing.T) {
 	dir := t.TempDir()
 	s, err := OpenStore(dir)
@@ -273,8 +258,8 @@ func TestChangeBurstSurvivesLossAndRestart(t *testing.T) {
 			must(t, s.Plan(id, -1, "add", ""))
 			ss := get(t, s, id)
 			first, second := ss.Sections[0].ID, ss.Sections[1].ID
-			must(t, s.SetSection(id, first, -1, 7, nil, false))
-			must(t, s.SetSection(id, second, -1, 5, nil, false))
+			must(t, s.SetSpool(id, first, -1, 7))
+			must(t, s.SetSpool(id, second, -1, 5))
 			for copy := 0; copy < 3; copy++ {
 				if delivered&(1<<copy) == 0 {
 					continue

@@ -1,15 +1,30 @@
 # Changelog
 
-## Unreleased
+## 1.2.0
 
+- Simplify session pages with pencil-based inline naming and spool assignment,
+  original-name placeholders, and stable editor layouts.
+- Remove manual weight correction from the UI and application. Weights now come
+  only from printer markers; make manual adjustments directly in Spoolman.
+  Legacy weight override values are no longer used.
+- Reveal bulk-selection checkboxes only after choosing Select, align selection
+  controls, and show action results beside them.
+- Filter sessions immediately when choosing a printer, without reloading the
+  page; preserve browser Back and Forward navigation.
+- Show complete, syntax-colored setup G-code alongside concise explanations and
+  paste locations, ordered Start, End, then Color change. Switch printers without
+  reloading and copy each generated block exactly.
+- Remove redundant labels and explanatory panels, place archived-session access
+  below catalog refresh, and improve desktop and mobile spacing and typography.
 - Require an assigned spool on every section before archiving a session,
   including bulk archive. Saving No spool on an archived session automatically
   restores it to the print library and records the restoration in its history.
-
 - Select multiple sessions on the current library page to
   archive closed sessions or restore archived sessions. Report partial results,
   preserve selection through live updates, and reconcile lost responses without
   automatically replaying actions. Native forms remain available without JavaScript.
+
+No slicer snippet changes are required for this release.
 
 ## 1.1.0
 

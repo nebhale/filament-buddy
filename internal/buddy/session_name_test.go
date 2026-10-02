@@ -107,7 +107,7 @@ func TestDisplayNamePreservesAccountingAndSessionIdentity(t *testing.T) {
 	at := time.Now()
 	id := apply(t, s, "M118 FB1 START c1 Print", at)
 	before := get(t, s, id)
-	must(t, s.SetSection(id, before.Sections[0].ID, -1, 7, nil, false))
+	must(t, s.SetSpool(id, before.Sections[0].ID, -1, 7))
 	apply(t, s, "M118 FB1 CHANGE c1 1 12000", at.Add(time.Second))
 	current := get(t, s, id)
 	ch, stop := s.changes.subscribe()

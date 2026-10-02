@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http/httptest"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -60,6 +61,24 @@ func TestWebSecurityAndActions(t *testing.T) {
 	}
 	if get(t, s, id).Sections[0].SpoolID != 1 {
 		t.Fatal("assignment failed")
+	}
+	before := get(t, s, id)
+	for _, enhanced := range []bool{false, true} {
+		values := url.Values{"csrf": {token}, "revision": {strconvI(before.Revision)}, "section": {sid}, "grams": {"10"}}
+		if enhanced {
+			values.Set("expected_override", "")
+		}
+		req := httptest.NewRequest("POST", "/sessions/"+id+"/weight", strings.NewReader(values.Encode()))
+		req.SetBasicAuth("buddy", "password")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		if enhanced {
+			req.Header.Set("Accept", "application/json")
+		}
+		rw := httptest.NewRecorder()
+		h.ServeHTTP(rw, req)
+		if rw.Code != 404 || !reflect.DeepEqual(before, get(t, s, id)) {
+			t.Fatalf("removed weight action changed the session: %d %s", rw.Code, rw.Body.String())
+		}
 	}
 	if r = request("POST", "/sessions/"+id+"/spool", data.Encode(), true); r.Code != 409 {
 		t.Fatal("stale form accepted")

@@ -15,7 +15,7 @@ func assignUnassignedSpools(t *testing.T, s *Store, id string) {
 	t.Helper()
 	for _, section := range get(t, s, id).Sections {
 		if section.SpoolID == 0 {
-			must(t, s.SetSection(id, section.ID, -1, 7, nil, false))
+			must(t, s.SetSpool(id, section.ID, -1, 7))
 		}
 	}
 }
@@ -64,25 +64,24 @@ func TestClearingSpoolRestoresArchivedSessionAtomically(t *testing.T) {
 			// Both forms reject stale edits before changing the archive flag.
 			var err error
 			if enhanced {
-				err = s.SetSectionExpected(id, sid, 0, nil, false, SectionExpectation{Spool: 8})
+				err = s.SetSpoolExpected(id, sid, 0, 8)
 			} else {
-				err = s.SetSection(id, sid, original.Revision-1, 0, nil, false)
+				err = s.SetSpool(id, sid, original.Revision-1, 0)
 			}
 			if !errors.Is(err, ErrConflict) || !reflect.DeepEqual(original, get(t, s, id)) {
 				t.Fatal("stale edit changed the archived session", err)
 			}
-			must(t, s.SetSection(id, sid, -1, 0, ptr(10000), true))
-			must(t, s.SetSection(id, sid, -1, 8, nil, false))
+			must(t, s.SetSpool(id, sid, -1, 8))
 			if !get(t, s, id).Archived {
-				t.Fatal("weight or assigned-spool edit restored the session")
+				t.Fatal("assigned-spool edit restored the session")
 			}
 			before := get(t, s, id)
 			updates, stop := s.changes.subscribe()
 			defer stop()
 			if enhanced {
-				err = s.SetSectionExpected(id, sid, 0, nil, false, SectionExpectation{Spool: 8})
+				err = s.SetSpoolExpected(id, sid, 0, 8)
 			} else {
-				err = s.SetSection(id, sid, before.Revision, 0, nil, false)
+				err = s.SetSpool(id, sid, before.Revision, 0)
 			}
 			must(t, err)
 			after := get(t, s, id)
@@ -119,7 +118,7 @@ func TestArchiveHTTPRejectsUnassignedSessionsAndAllowsOthers(t *testing.T) {
 	b := newBulkHarness(t)
 	assigned, unassigned := b.session(true), b.session(true)
 	ss := get(t, b.s.Store, unassigned)
-	must(t, b.s.Store.SetSection(unassigned, ss.Sections[0].ID, ss.Revision, 0, nil, false))
+	must(t, b.s.Store.SetSpool(unassigned, ss.Sections[0].ID, ss.Revision, 0))
 	for _, enhanced := range []bool{false, true} {
 		values := url.Values{"csrf": {b.token}, "revision": {strconv.Itoa(get(t, b.s.Store, unassigned).Revision)}}
 		r := httptest.NewRequest("POST", "/sessions/"+unassigned+"/archive", strings.NewReader(values.Encode()))

@@ -32,7 +32,7 @@ Indexed SQL columns support active-session, paginated-history, and work queries.
 A session document owns its ordered sections, observations, audit history, applied
 per-spool balances, and operation ledger. A transaction saves edits and adjustment
 plans together. One process lock and an application mutation mutex serialize
-changes. Enhanced assignment and override forms compare expected original values
+changes. Enhanced spool assignment forms compare expected original values
 inside that transaction; legacy forms and structural actions retain revision checks.
 
 The worker persists `inflight` before any remote operation. Confirmed writes
@@ -40,6 +40,9 @@ update the applied balance and regenerate desired deltas. A crash leaves an
 uncertain request requiring explicit resolution, never a blind retry. Refunds
 precede new charges for the same section; uncertainty blocks other writes to the
 same spool. Never replace Spoolman's total weight with a locally computed total.
+
+Section weights come only from printer markers. Make manual weight corrections
+directly in Spoolman.
 
 Keep tests at behavior boundaries: reassignment after external consumption,
 missing markers, stale forms, uncertain remote outcomes, and restart recovery.
@@ -70,9 +73,10 @@ files out of source control. Use illustrative configuration and synthetic data.
 
 ## Live browser verification
 
-The shared `web/updates.js` transport and reconciler intentionally match in both
-Buddy repositories. Keep changes and their regression tests aligned. The server
-owns rendered presentation; the browser owns drafts and interaction. Notifications
+The shared `web/updates.js` transport and reconciler, `web/name.js` inline
+editor, and `web/setup.js` setup controls intentionally match in both Buddy
+repositories. Keep changes and their regression tests aligned. The server owns
+rendered presentation; the browser owns drafts and interaction. Notifications
 are invalidations, not commands or mutation acknowledgments.
 
 CI runs `scripts/browser.test.cjs` against isolated loopback demos with synthetic
