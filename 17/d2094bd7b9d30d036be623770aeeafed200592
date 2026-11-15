@@ -1,0 +1,27 @@
+CONTRIBUTING.md
+  s_183cc2e94f8ac3::t_e351edba574a91 88,90,98-102
+CHANGELOG.md
+  s_183cc2e94f8ac3::t_e351edba574a91 3-7
+.github/workflows/ci.yaml
+  s_183cc2e94f8ac3::t_fdda4e5684aeb5 30,32
+internal/buddy/web/picker.js
+  s_183cc2e94f8ac3::t_54a44232a23202 188-190
+scripts/browser.test.cjs
+  s_183cc2e94f8ac3::t_21746e1ed0903a 9-10,25,32-33,393-442
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "17d2094bd7b9d30d036be623770aeeafed200592",
+  "prompts": {},
+  "sessions": {
+    "s_183cc2e94f8ac3": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dcb0-7890-72f3-a182-b6ec147532fd",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
