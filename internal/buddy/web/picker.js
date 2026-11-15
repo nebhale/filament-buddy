@@ -185,7 +185,9 @@ class SpoolPicker {
       const text = document.createElement("span"); text.textContent = `${spool.Label}${spool.Archived ? " (archived)" : ""}${spool.Unavailable ? " (unavailable)" : ""}`;
       if (spool.RemainingMG != null) { const weight = document.createElement("small"); weight.textContent = `${(spool.RemainingMG / 1000).toFixed(1)} g remaining`; text.append(weight); }
       option.append(swatch, text);
-      option.addEventListener("pointerdown", event => event.preventDefault());
+      // Preserve focus until click, including synthesized mouse events on iOS.
+      // Cancelling pointerdown can blur the search field before selection.
+      option.addEventListener("mousedown", event => event.preventDefault());
       option.addEventListener("click", () => this.choose(value));
       this.results.append(option);
     }

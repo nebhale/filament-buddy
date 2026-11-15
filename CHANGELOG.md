@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.5
+
+- Fix spool selection on iPhone by keeping search focus until a tap completes.
+- Cover touch selection, cancellation, and explicit saves in Chromium and WebKit.
+
 ## 1.2.0
 
 - Simplify session pages with pencil-based inline naming and spool assignment,
