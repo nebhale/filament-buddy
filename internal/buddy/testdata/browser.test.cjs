@@ -2,7 +2,7 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const context = vm.createContext({ window: {}, document: { querySelectorAll: () => [] } });
+const context = vm.createContext({ window: {}, document: { querySelectorAll: () => [], addEventListener: () => {} } });
 vm.runInContext(fs.readFileSync(`${__dirname}/../web/picker.js`, 'utf8'), context);
 const search = (spools, query, archived = false, assigned = '0', selected = '0') => {
  context.spools = spools; context.query = query; context.archived = archived; context.assigned = assigned; context.selected = selected;

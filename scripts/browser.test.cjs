@@ -440,6 +440,82 @@ if (snapshot) {
     assert.equal(await form.getByRole('button', { name: 'Assign spool for section 1', exact: true }).isVisible(), true);
   });
 
+  test('spool selection survives synchronization between press and click', { timeout: 30000 }, async t => {
+    const page = await pageFor(t, { touch: true });
+    await page.setViewportSize({ width: 1024, height: 1366 });
+    const spools = [
+      { ID: 7, Label: '#7 · Purple PLA', Color: '8844aa', RemainingMG: 100000 },
+      { ID: 12, Label: '#12 · White PLA', Color: 'ffffff', RemainingMG: 123000 },
+      ...Array.from({ length: 60 }, (_, i) => ({ ID: 100 + i, Label: `#${100 + i} · Sample PLA` })),
+    ];
+    await page.request.post(`${address}/demo/catalog`, { data: spools });
+    await marker(page, 'START c1 Spool synchronization');
+    await page.locator('.session-row').filter({ hasText: 'Spool synchronization' }).tap();
+    await page.waitForFunction(() => document.getElementById('connection-state').textContent === 'Live');
+    const form = page.locator('.spool-form').first();
+    await form.locator('.spool-edit').tap();
+    await form.getByRole('combobox').fill('white');
+    const option = form.locator('[role=option][data-value="12"]');
+    const box = await option.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.evaluate(() => window.buddyUpdates.flushDeferred());
+    await page.mouse.up();
+    assert.equal(await form.locator('select').inputValue(), '12', 'synchronizing while a choice is pressed must preserve its click target');
+
+    await form.getByRole('combobox').fill('purple');
+    const weight = await form.locator('[role=option][data-value="7"] small').boundingBox();
+    await page.mouse.move(weight.x + weight.width / 2, weight.y + weight.height / 2);
+    await page.mouse.down();
+    spools[0].RemainingMG = 99000;
+    await page.request.post(`${address}/demo/catalog`, { data: spools });
+    await page.waitForFunction(() => window.BuddyPicker.spools.find(s => s.ID === 7).RemainingMG === 99000);
+    await page.mouse.up();
+    assert.equal(await form.locator('select').inputValue(), '7', 'updating a weight must retain the pressed child element');
+
+    await form.getByRole('combobox').fill('sample');
+    const list = form.getByRole('listbox');
+    await list.evaluate(n => { n.scrollTop = 180; });
+    await page.evaluate(() => window.buddyUpdates.flushDeferred());
+    assert.equal(await list.evaluate(n => n.scrollTop), 180, 'synchronization preserves the position in a long catalog');
+  });
+
+  test('spool selection accepts delayed touch clicks after search loses focus', { timeout: 30000 }, async t => {
+    const page = await pageFor(t, { touch: true });
+    await page.setViewportSize({ width: 1024, height: 1366 });
+    await page.request.post(`${address}/demo/catalog`, { data: [
+      { ID: 7, Label: '#7 · Purple PLA', Color: '8844aa' },
+      { ID: 12, Label: '#12 · White PLA', Color: 'ffffff' },
+    ] });
+    await marker(page, 'START c1 Delayed touch selection');
+    await page.locator('.session-row').filter({ hasText: 'Delayed touch selection' }).tap();
+    await page.waitForFunction(() => document.getElementById('connection-state').textContent === 'Live');
+    const form = page.locator('.spool-form').first();
+    const input = form.getByRole('combobox');
+    await form.locator('.spool-edit').tap();
+    await input.fill('white');
+    // A native touch click can arrive in a later task than pointerup and blur.
+    // Keep the original target: resolving the locator again hides this race.
+    const target = await form.locator('[role=option][data-value="12"] span').elementHandle();
+    await target.dispatchEvent('pointerdown', { pointerId: 9, pointerType: 'touch', isPrimary: true });
+    await target.dispatchEvent('pointerup', { pointerId: 9, pointerType: 'touch', isPrimary: true });
+    await input.evaluate(n => n.blur());
+    await page.evaluate(() => new Promise(resolve => setTimeout(resolve, 0)));
+    await target.click({ timeout: 2000 });
+    assert.equal(await form.locator('select').inputValue(), '12');
+    assert.equal(await input.getAttribute('aria-expanded'), 'false');
+    assert.equal(await input.evaluate(n => n === document.activeElement), true);
+
+    await input.fill('purple');
+    await page.locator('h1').tap();
+    assert.equal(await input.getAttribute('aria-expanded'), 'false', 'touching outside closes the popup even when no element gains focus');
+    await input.focus();
+    await form.getByRole('button', { name: 'Cancel', exact: true }).focus();
+    assert.equal(await input.getAttribute('aria-expanded'), 'false', 'moving keyboard focus outside closes the popup');
+    await form.getByRole('button', { name: 'Cancel', exact: true }).tap();
+    assert.equal(await form.locator('select').inputValue(), '0');
+  });
+
   test('search, keyboard selection, archived spools, and catalog updates work on mobile', { timeout: 30000 }, async t => {
     const page = await pageFor(t, { mobile: true }); await session(page);
     const response = await page.request.post(`${address}/demo/catalog`, { data: [{ ID: 77, Label: '#77 · Retired Purple PLA', Archived: true, Color: '8844aa' }, { ID: 88, Label: '#88 · Fresh Yellow PETG', Color: 'ffee00', RemainingMG: 123000 }] });

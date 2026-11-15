@@ -87,7 +87,7 @@ buddy_browser_tools="$(mktemp -d)"
 npm install --prefix "$buddy_browser_tools" --no-audit --no-fund playwright@1.62.1
 node "$buddy_browser_tools/node_modules/playwright/cli.js" install chromium webkit --only-shell
 NODE_PATH="$buddy_browser_tools/node_modules" node --test scripts/browser.test.cjs
-NODE_PATH="$buddy_browser_tools/node_modules" BUDDY_TEST_BROWSER=webkit node --test --test-name-pattern='spool selection responds to touch' scripts/browser.test.cjs
+NODE_PATH="$buddy_browser_tools/node_modules" BUDDY_TEST_BROWSER=webkit node --test --test-name-pattern='spool selection' scripts/browser.test.cjs
 ```
 
 Set `BUDDY_SCREENSHOT_DIR` to retain desktop and mobile screenshots. The tests
@@ -96,7 +96,8 @@ catalog (Filament), and handler-restart routes exercise real HTTP without touchi
 production or hardware. Production endpoints do not include these controls.
 The suites cover multiple tabs, conflicts, focus, drafts, polling, reconnects,
 and fresh credentials after a restart. Spool selection also runs with touch taps
-and mobile emulation in Chromium and WebKit to cover iPhone interactions.
+and mobile emulation in Chromium and WebKit, including synchronization and
+search focus loss before a delayed touch click on iPhone and iPad.
 Unit tests additionally control heartbeat expiry, hidden tabs, and obsolete
 responses deterministically. Required Source and native ARM64/AMD64 container
 checks must all pass before merge. Follow the
