@@ -1,0 +1,33 @@
+CHANGELOG.md
+  s_1fcd06f7276456::t_df991094a3dc3d 19-23
+internal/buddy/models.go
+  s_1fcd06f7276456::t_df991094a3dc3d 98-114
+internal/buddy/store.go
+  s_1fcd06f7276456::t_df991094a3dc3d 432,487
+internal/buddy/archive_test.go
+  s_1fcd06f7276456::t_254806a25561d9 95-96,192-232,234-268
+  s_1fcd06f7276456::t_0be5248adfcfdb 233
+  s_1fcd06f7276456::t_675e04bbc033a1 9,13,25-94
+  s_1fcd06f7276456::t_83e5dbce94cac5 97
+README.md
+  s_1fcd06f7276456::t_df991094a3dc3d 198-202,221-224
+  s_1fcd06f7276456::t_588d671784bbc6 203-204
+internal/buddy/web/pages.html
+  s_1fcd06f7276456::t_03fa4a822099f4 36,47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f0ad5c9fc976f0977cdba5e22f6218cc2f27a5e1",
+  "prompts": {},
+  "sessions": {
+    "s_1fcd06f7276456": {
+      "agent_id": {
+        "tool": "codex",
+        "id": "01a1dca6-694f-79b1-bca5-5ff5f7419ad1",
+        "model": "gpt-6.1-sol"
+      },
+      "human_author": "Ben Hale <nebhale@nebhale.com>"
+    }
+  }
+}
