@@ -95,6 +95,23 @@ func (s Session) UnassignedSections() int {
 	}
 	return n
 }
+
+// CanArchive permits unassigned sections only when no weights were reported.
+func (s Session) CanArchive() bool {
+	if s.State != "closed" {
+		return false
+	}
+	if s.UnassignedSections() == 0 {
+		return true
+	}
+	for _, section := range s.Sections {
+		if section.ReportedMG != nil {
+			return false
+		}
+	}
+	return true
+}
+
 func (s *Session) audit(action, detail string) {
 	s.History = append(s.History, History{time.Now().UTC(), action, detail})
 }

@@ -429,7 +429,7 @@ func (s *Store) setSpool(id, sid string, rev, spool int, expected *int) error {
 		}
 		v.SpoolID = spool
 		ss.audit("spool assignment", fmt.Sprintf("Section %d → spool %d", v.Number, spool))
-		if spool == 0 && ss.Archived {
+		if spool == 0 && ss.Archived && !ss.CanArchive() {
 			ss.Archived = false
 			ss.audit("archive", fmt.Sprintf("false: automatically restored because Section %d has no assigned spool", v.Number))
 		}
@@ -484,7 +484,7 @@ func (s *Store) Archive(id string, rev int, archive bool) error {
 		if ss.State != "closed" {
 			return ErrConflict
 		}
-		if archive && ss.UnassignedSections() > 0 {
+		if archive && !ss.CanArchive() {
 			return fmt.Errorf("%w: %w", ErrConflict, ErrUnassignedSpools)
 		}
 		ss.Archived = archive
