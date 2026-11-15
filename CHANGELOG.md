@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2.6
+
+- Preserve spool options and their text during live updates so delayed touch
+  clicks can complete on iPhone and iPad.
+- Dismiss the spool popup on outside pointer input or focus changes, allowing
+  touch selection to continue after the search field loses focus.
+- Cover delayed clicks, synchronization during a press, live weight changes,
+  and catalog scroll preservation in Chromium and WebKit.
+
 ## 1.2.5
 
 - Fix spool selection on iPhone by keeping search focus until a tap completes.

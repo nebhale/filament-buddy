@@ -83,7 +83,6 @@ class SpoolPicker {
         else if (popup.hidden && !this.save.disabled) form.requestSubmit(this.save);
       }
     });
-    root.addEventListener("focusout", () => setTimeout(() => { if (!root.contains(document.activeElement)) this.close(); }, 0));
     refresh.addEventListener("click", async () => {
       refresh.disabled = true; this.feedback.textContent = "Refreshing catalog…";
       try {
@@ -176,24 +175,48 @@ class SpoolPicker {
     }
     const visible = this.visible = [{ ID: 0, Label: "No spool" }, ...choices];
     if (!visible.some(s => String(s.ID) === this.highlight)) this.highlight = null;
-    this.results.replaceChildren();
+    // Pointer release can synchronize the page before a touch click arrives.
+    // Retain options and their children so that click still reaches its target.
+    const previous = new Map(Array.from(this.results.children, option => [option.dataset.value, option]));
+    let next = this.results.firstElementChild;
     for (const spool of visible) {
-      const option = document.createElement("div"); const value = String(spool.ID);
-      option.id = `${this.input.id}-option-${value}`; option.setAttribute("role", "option"); option.setAttribute("aria-selected", String(value === this.highlight)); option.dataset.value = value;
-      option.className = "picker-option";
-      const swatch = spoolSwatch(spool.Color);
-      const text = document.createElement("span"); text.textContent = `${spool.Label}${spool.Archived ? " (archived)" : ""}${spool.Unavailable ? " (unavailable)" : ""}`;
-      if (spool.RemainingMG != null) { const weight = document.createElement("small"); weight.textContent = `${(spool.RemainingMG / 1000).toFixed(1)} g remaining`; text.append(weight); }
-      option.append(swatch, text);
-      // Preserve focus until click, including synthesized mouse events on iOS.
-      // Cancelling pointerdown can blur the search field before selection.
-      option.addEventListener("mousedown", event => event.preventDefault());
-      option.addEventListener("click", () => this.choose(value));
-      this.results.append(option);
+      const value = String(spool.ID);
+      let option = previous.get(value);
+      previous.delete(value);
+      if (!option) {
+        option = document.createElement("div");
+        option.id = `${this.input.id}-option-${value}`; option.setAttribute("role", "option"); option.dataset.value = value;
+        option.className = "picker-option";
+        const text = document.createElement("span");
+        const weight = document.createElement("small"); weight.hidden = true; weight.append(document.createTextNode(""));
+        text.append(document.createTextNode(""), weight);
+        option.append(spoolSwatch(spool.Color), text);
+        // Keep keyboard focus in the search field for mouse and trackpad clicks.
+        option.addEventListener("mousedown", event => event.preventDefault());
+        option.addEventListener("click", () => this.choose(value));
+      }
+      const selected = String(value === this.highlight);
+      if (option.getAttribute("aria-selected") !== selected) option.setAttribute("aria-selected", selected);
+      const circle = option.querySelector("circle"), color = spoolColor(spool.Color);
+      if (circle.getAttribute("fill") !== color) circle.setAttribute("fill", color);
+      const text = option.querySelector("span");
+      const label = `${spool.Label}${spool.Archived ? " (archived)" : ""}${spool.Unavailable ? " (unavailable)" : ""}`;
+      if (text.firstChild.nodeValue !== label) text.firstChild.nodeValue = label;
+      const weight = text.querySelector("small");
+      const remaining = spool.RemainingMG == null ? "" : `${(spool.RemainingMG / 1000).toFixed(1)} g remaining`;
+      if (weight.firstChild.nodeValue !== remaining) weight.firstChild.nodeValue = remaining;
+      if (weight.hidden !== !remaining) weight.hidden = !remaining;
+      if (option !== next) this.results.insertBefore(option, next);
+      next = option.nextElementSibling;
     }
-    this.count.textContent = matches > 49 ? `${matches} matching spools · showing up to 49. Narrow your search for more.` : `${matches} matching spool${matches === 1 ? "" : "s"}`;
-    if (this.highlight !== null) this.input.setAttribute("aria-activedescendant", `${this.input.id}-option-${this.highlight}`);
-    else this.input.removeAttribute("aria-activedescendant");
+    for (const option of previous.values()) option.remove();
+    const count = matches > 49 ? `${matches} matching spools · showing up to 49. Narrow your search for more.` : `${matches} matching spool${matches === 1 ? "" : "s"}`;
+    if (this.count.textContent !== count) this.count.textContent = count;
+    const active = this.highlight === null ? null : `${this.input.id}-option-${this.highlight}`;
+    if (this.input.getAttribute("aria-activedescendant") !== active) {
+      if (active === null) this.input.removeAttribute("aria-activedescendant");
+      else this.input.setAttribute("aria-activedescendant", active);
+    }
   }
 }
 window.BuddyPicker = {
@@ -216,4 +239,12 @@ window.BuddyPicker = {
     this.enhance();
   },
 };
+// Touch keyboards can blur the search before delivering a click. Dismiss only
+// when the user actually interacts or moves focus outside the picker.
+for (const type of ["pointerdown", "focusin"]) document.addEventListener(type, event => {
+  for (const form of document.querySelectorAll(".spool-form")) {
+    const picker = form.buddyPicker;
+    if (picker && !picker.popup.hidden && !picker.root.contains(event.target)) picker.close();
+  }
+});
 window.BuddyPicker.enhance();
