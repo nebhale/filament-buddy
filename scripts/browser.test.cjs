@@ -6,7 +6,8 @@ const { mkdtempSync, rmSync, mkdirSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const path = require('node:path');
 const { spawn, execFileSync } = require('node:child_process');
-const { chromium } = require('playwright');
+const { chromium, webkit } = require('playwright');
+const browserType = process.env.BUDDY_TEST_BROWSER === 'webkit' ? webkit : chromium;
 const root = path.resolve(__dirname, '..');
 const snapshot = path.basename(root) === 'snapshot-buddy';
 let browser, demo, address, temporary;
@@ -21,15 +22,15 @@ before(async () => {
     demo.stdout.on('data', output); demo.stderr.on('data', output);
     demo.once('exit', code => { clearTimeout(timer); reject(new Error(`Demo exited: ${code}`)); });
   });
-  browser = await chromium.launch({ headless: true });
+  browser = await browserType.launch({ headless: true });
 });
 after(async () => {
   await browser?.close();
   if (demo && demo.exitCode === null) { const exited = new Promise(resolve => demo.once('exit', resolve)); demo.kill('SIGTERM'); await exited; }
   if (temporary) rmSync(temporary, { recursive: true, force: true });
 });
-async function pageFor(t, { mobile = false, fallback = false } = {}) {
-  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 } });
+async function pageFor(t, { mobile = false, fallback = false, touch = false } = {}) {
+  const context = await browser.newContext({ viewport: mobile ? { width: 390, height: 844 } : { width: 1280, height: 900 }, hasTouch: touch, isMobile: touch });
   t.after(() => context.close());
   const page = await context.newPage();
   const errors = []; page.on('pageerror', error => errors.push(error.message));
@@ -387,6 +388,56 @@ if (snapshot) {
     const response = await page.request.get(`${address}/api/sessions/${page.url().split('/').pop()}`);
     assert.equal((await response.json()).Sections[0].SpoolID, 7);
     await other.close();
+  });
+
+  test('spool selection responds to touch taps and saves explicitly', { timeout: 30000 }, async t => {
+    const page = await pageFor(t, { mobile: true, touch: true });
+    const response = await page.request.post(`${address}/demo/catalog`, { data: [
+      { ID: 7, Label: '#7 · Purple PLA', Color: '8844aa' },
+      { ID: 12, Label: '#12 · White PLA', Color: 'ffffff' },
+    ] });
+    assert.equal(response.status(), 204);
+    await marker(page, 'START c1 Touch spool selection');
+    await page.locator('.session-row').filter({ hasText: 'Touch spool selection' }).tap();
+    await page.waitForFunction(() => document.getElementById('connection-state').textContent === 'Live');
+    const form = page.locator('.spool-form').first();
+    const input = form.getByRole('combobox');
+    const submit = form.getByRole('button', { name: 'Save spool', exact: true });
+    const savedSpool = async () => (await (await page.request.get(`${address}/api/sessions/${page.url().split('/').pop()}`)).json()).Sections[0].SpoolID;
+    let writes = 0;
+    page.on('request', request => { if (request.method() === 'POST' && request.url().endsWith('/spool')) writes++; });
+
+    await form.getByRole('button', { name: 'Assign spool for section 1', exact: true }).tap();
+    await input.fill('white');
+    await form.getByRole('option').filter({ hasText: '#12 · White PLA' }).locator('span').tap();
+    assert.equal(await form.locator('select').inputValue(), '12');
+    assert.equal(await input.getAttribute('aria-expanded'), 'false');
+    assert.equal(await input.evaluate(n => n === document.activeElement), true);
+    assert.equal(await submit.isEnabled(), true);
+    assert.equal(writes, 0);
+    assert.equal(await savedSpool(), 0);
+    await submit.tap();
+    await page.waitForFunction(() => !document.querySelector('.spool-form').buddyPicker.editing);
+    assert.equal(await savedSpool(), 12);
+    assert.equal(writes, 1);
+    await page.reload();
+    assert.equal(await form.locator('.spool-label').textContent(), '#12 · White PLA');
+
+    await form.getByRole('button', { name: 'Change spool for section 1', exact: true }).tap();
+    await input.fill('purple');
+    await form.getByRole('option').filter({ hasText: '#7 · Purple PLA' }).locator('svg').tap();
+    assert.equal(await form.locator('select').inputValue(), '7');
+    await form.getByRole('button', { name: 'Cancel', exact: true }).tap();
+    assert.equal(await form.locator('select').inputValue(), '12');
+    await form.getByRole('button', { name: 'Change spool for section 1', exact: true }).tap();
+    await form.getByRole('option', { name: 'No spool', exact: true }).tap();
+    assert.equal(await form.locator('select').inputValue(), '0');
+    assert.equal(writes, 1);
+    await submit.tap();
+    await page.waitForFunction(() => !document.querySelector('.spool-form').buddyPicker.editing);
+    assert.equal(await savedSpool(), 0);
+    assert.equal(writes, 2);
+    assert.equal(await form.getByRole('button', { name: 'Assign spool for section 1', exact: true }).isVisible(), true);
   });
 
   test('search, keyboard selection, archived spools, and catalog updates work on mobile', { timeout: 30000 }, async t => {

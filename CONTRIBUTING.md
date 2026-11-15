@@ -85,8 +85,9 @@ data at desktop and mobile widths. To run it locally with Node.js 24+:
 ```sh
 buddy_browser_tools="$(mktemp -d)"
 npm install --prefix "$buddy_browser_tools" --no-audit --no-fund playwright@1.62.1
-node "$buddy_browser_tools/node_modules/playwright/cli.js" install chromium --only-shell
+node "$buddy_browser_tools/node_modules/playwright/cli.js" install chromium webkit --only-shell
 NODE_PATH="$buddy_browser_tools/node_modules" node --test scripts/browser.test.cjs
+NODE_PATH="$buddy_browser_tools/node_modules" BUDDY_TEST_BROWSER=webkit node --test --test-name-pattern='spool selection responds to touch' scripts/browser.test.cjs
 ```
 
 Set `BUDDY_SCREENSHOT_DIR` to retain desktop and mobile screenshots. The tests
@@ -94,8 +95,10 @@ build and stop their own demo server with `BUDDY_DEMO_PORT=0`. Demo-only marker,
 catalog (Filament), and handler-restart routes exercise real HTTP without touching
 production or hardware. Production endpoints do not include these controls.
 The suites cover multiple tabs, conflicts, focus, drafts, polling, reconnects,
-and fresh credentials after a restart. Unit tests additionally control heartbeat
-expiry, hidden tabs, and obsolete responses deterministically. Required Source
-and native ARM64/AMD64 container checks must all pass before merge. Follow the
+and fresh credentials after a restart. Spool selection also runs with touch taps
+and mobile emulation in Chromium and WebKit to cover iPhone interactions.
+Unit tests additionally control heartbeat expiry, hidden tabs, and obsolete
+responses deterministically. Required Source and native ARM64/AMD64 container
+checks must all pass before merge. Follow the
 README public-host checks at the next deployment; local results cannot certify
 a production Cloudflare Tunnel.
