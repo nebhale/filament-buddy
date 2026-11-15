@@ -195,11 +195,13 @@ archived spools remain selectable. Deleted spool IDs remain visible historically
 but cannot receive adjustments. Do not reuse a Spoolman ID for a different physical
 spool or point an existing ledger at an unrelated Spoolman database.
 
-Archiving is available on closed sessions only after every section has an
-assigned spool, including missing, incomplete, and unreached sections. Choosing
-**No spool** on any section of an archived session automatically restores that
-session to the main library when the edit is saved. Archiving only hides the
-session: charges, corrections, history, and restoration remain available.
+Closed sessions without any reported weights can be archived without assigning
+spools. Once any weight is reported, including zero, every section must have an
+assigned spool before archiving, including missing, incomplete, and unreached
+sections. Choosing **No spool** on any section of an archived session with
+reported weights automatically restores that session to the main library when
+the edit is saved. Archiving only hides the session: charges, corrections,
+history, and restoration remain available.
 Spool assignments never change physical spool locations. FilaBridge's old history
 is not imported. Disable competing consumption tracking for these prints before
 using Filament Buddy, or both applications will charge them.
@@ -216,8 +218,10 @@ Choose **Archive selected** to hide those sessions while keeping their sections,
 spool adjustments, and editable history. In **View archived sessions**, use
 **Restore selected** to return them to the library. Neither action needs a
 confirmation. Active sessions must be closed individually before selecting them.
-Sessions with unassigned sections cannot be selected for archive; assign every
-section first. Existing archived sessions can always be selected for restoration.
+Sessions with reported weights and unassigned sections cannot be selected for
+archive; assign every section first. Closed sessions without reported weights
+can be selected without assigning spools. Existing archived sessions can always
+be selected for restoration.
 
 Bulk actions report each blocked or failed session and process the others.
 Successful selections clear; remaining selections can be reviewed before retrying.
